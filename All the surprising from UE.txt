@@ -1,0 +1,80 @@
+虚幻的惊喜
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+最后更新2022，aug，14
+
+
+setup
+
+官方文档里面有一个how to set up visual studio for unreal engine。现在的安装和以前好像不一样了。反正照做就完事了。
+
+Visual Assist或者resharper。我现在还不清楚这个到底是怎么一回事，就看到的信息来说，va好像比较流行。可能这个信息是这个文档最最重要的一个。
+用va的话，不要关vs自带的intellisense。
+尝试尽量管掉虚幻里面的plugin。如果关错了，可以用记事本开虚幻的工程文件，找plugin browser一类的一个名字，写成true，就行了。
+va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚幻的插件，可以无脑的关，因为如果去虚幻里面关插件其实更麻烦。
+
+
+碰撞检测，物理
+
+模拟物理有一个单独的check box。
+开模拟物理以后，碰撞组的那个地方必须要选择enable physics的其中一个，不然会出warning。
+query是sweep，overlap，各种trace by channel用的。必须也要在droplist里面选开启query。
+overlap 事件必须是双方都要generates 才有。
+hit struct里面的impact normal很可能是算法真的找到的第一个三角面，测试过，不是很稳定，不是最靠近或者最什么什么角度的。如果相邻三角面的角度不大，应该还ok。反正正常情况用normal就很好。除非normal在撞到边和角的时候会比较破碎。
+
+physical anim里面，mesh的碰撞要把模拟物理开开，不然不会有效果。
+手动追加物理干扰的方法有，appulse，add force，set linear/angular velocity。
+
+遇到碰撞或者overlap不工作的情况，依次检查所有的可能的地方。函数里面通常由忽略自己，忽略列表，到底是by channel还是by object type。所有相关物体的模拟物理开了没，函数里面也可以设置模拟物理。然后detail面板里面的collision里面的那个droplist里面有没有物理，下面的3列的check box里面设置对没有。
+比较容易忘记的还是函数调用的时候的各种设置。
+
+
+bsp
+
+5里面是在quick add to project（cube with a green +）里面的place actor panel。然后进去找。
+之后在details里面，有一个align brush vertices，点一下，不然编辑功能不全。
+lethe是要用2d的图形。做法是，最坐上的select mode，然后（省略），然后pen模式，勾上create brush shape，然后在轴对齐的某一个视图画，然后lethe工具，在另外一个轴对齐视图用。
+选中有相互作用的所有bsp，一起转static mesh，不然会抽。
+bsp增加三角面的时候，点选顶点的时候要顺时针，不然flip。
+
+
+controller
+
+单机不要用possess。
+
+
+event
+
+蓝图里面的时候details里面有一个好像是consume event。这个会导致独占，但是可能不稳定。
+
+event还有一个顺序问题。我不记得官方的图在哪儿了，反正就是，
+1，有设置enable input的所有的actor
+2，controller。controller还可以设置一个好像是叫prerequisite tick actor，我没测试，反正名字大概也很好理解。
+3，ui还是gamemode，忘了，好像是gamemode吧。
+4，pawn
+这个顺序可以帮助解决输入事件拦截的一些很诡异的问题。
+
+
+widget
+
+ui是一个重灾区，各种乱七八糟的东西。
+c++里面写的时候，在header里面无脑的include一下blueprint/widgettree.h，除非知道确实不用这个。widgettree是物体，不是namespace或者class definition。
+c++里面的函数是native开头的，nativexxx这种。没有UFUNCTION标记。
+
+
+K2（不推荐用这个）
+
+网上有制作K2版本的函数的资料，但是不推荐真的在项目里面用。
+K2据说是以前虚幻很早的版本里面的kismet2.0，它的接班人是蓝图。通常的说法是k2开头的函数是蓝图里面调用的时候所调用的版本，在c++里面不用碰他们。这一块资料非常少。AddActorWorldOffset就是其中一个。
+
+
+
+
+
+
+
+
+
