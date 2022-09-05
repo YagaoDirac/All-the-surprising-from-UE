@@ -25,6 +25,26 @@ Visual Assist或者resharper。我现在还不清楚这个到底是怎么一回事，就看到的信息来说
 尝试尽量管掉虚幻里面的plugin。如果关错了，可以用记事本开虚幻的工程文件，找plugin browser一类的一个名字，写成true，就行了。
 va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚幻的插件，可以无脑的关，因为如果去虚幻里面关插件其实更麻烦。
 
+安装的时候尽量在默认分区直接来，默认设置安装，安装以后不要移动任何文件，不然会出各种奇怪的bug。
+
+
+
+shipping，packaging，release，cooking
+
+如果安装文件被移动过，会遇到无法cook的问题。最简单的办法就是重新安装虚幻。
+此外，查到的一些细节：
+editor preferences里面：
+enable support for long paths(260什么），可以无脑勾上。
+project settings里面：
+最上面的project里面，好几个都和发布有关。其中，project，packaging，右边packaging里面，advanced，list of maps to inlucde in a pachaged build，这个里面选文件的时候是选.umap文件。
+
+project，platforms，里面，是其他的化妆。
+
+cooking的一些具体细节可以在
+https://docs.unrealengine.com/5.0/en-US/build-operations-cooking-packaging-deploying-and-running-projects-in-unreal-engine/
+找到。我暂时不研究这个了。
+
+
 
 碰撞检测，物理
 
@@ -57,6 +77,13 @@ AI controller的auto possess一定要写对。spawn的和placed的一定要写对，不然会没有。
 
 
 behavior tree
+
+写在行为树的笔记的最开头，service，task那些里面，如果无法正常的得到黑板的内容，用传进来的controller，cast，get blackboard，然后往外拿。这些函数也会得到pawn，所以其实这些变量不一定要保存的黑板上。黑板的目的可能只在于行为树内部的事件驱动，也就是虚幻内建在行为树里面的那些decorator和task，和类似的。如果不是给内建的那些东西用，variable放在黑板上和放在controller或者pawn上没有任何区别。
+
+行为树的3个可自定义的组件的核心内容：
+task里面是perform condition check AI, execution start AI, execution finish AI.
+decorator: 
+service: 
 
 BTNode好像是无法保存自身的变量的，所有用同一个行为树的都共享这些节点，官方文档里面提到一个变量叫bCreateNodeInstance，我没查到，应该是c++里面的。总之官方提供了2个黑板之外的存变量的方法。
 https://docs.unrealengine.com/4.26/en-US/InteractiveExperiences/ArtificialIntelligence/BehaviorTrees/BehaviorTreeNodeReference/
@@ -106,9 +133,15 @@ black board
 官方在2015年的时候说过很快就会实现，反正今天2022年，写这个文档的时候，没有。
 
 
-看看nav mesh还有什么有意思的惊喜。
 
+nav mesh, navmesh
 
+navmesh本身内容不多，官方文档不长。需要记住的事情主要是：
+1，好像没有办法在同一个level里面制作超过1个navmesh，所以可能要为了多重navmesh专门制作多个level。
+2，navmesh可以让pawn跳，文档里面有讲。
+3，可以设置动态的navmesh，不过好像没什么用。动态下不知道能不能设置代价，没测试。
+4，ai在navmesh里面移动，在蓝图里面的节点是AI Move To，不是常规的函数节点，更像是一个宏，右上角有时钟图标。
+5, https://forums.unrealengine.com/t/how-do-i-get-the-navigation-path-to-a-point/294257/4
 
 
 
@@ -153,19 +186,21 @@ reset level
 widget, umg, ui
 
 1，widget是无法删除的，无法destroy的。如果作为根，要用add to viewport，其他的是add child widget。去掉的时候，根是remove from parent，其他的可以remove from parent，可以remove child，调用的主object不同。
-2，如果要把一些东西左对齐，同时一些东西右对齐，方法是，一个horizontal box，里面，左边的都是auto，右边第二个是fill，右边第一个是auto。直观点就是，auto，auto，auto，...，auto，fill（这个里面是空的），auto（这个是右边）。如果右边超过一个，就全部放到最右边的那一个的里面。Hierarchy里面的样子是：
-horizontal box
-   something(auto)
-   something(auto)
-   something(auto)
-   ...
-   something(auto)
-   something(fill，这个是空的)
-   horizontal box（auto）
-      something(auto，右边的)
-      something(auto，右边的)
-      something(auto，右边的)
-      ...
+
+2，anchor，也就是那朵菊花，逻辑是，菊花只标记百分比，之后子物件的具体的4个边是根据到菊花的绝对距离。
+比如一个一维的例子：
+anchor是10%到50%，子物件从anchor开始的偏移是12和-21。
+如果上一级widget是从100到500，那么anchor就是从100+（（500-100）*10%） == 140，到100+（（500-100）*50%） == 300。然后子物件的位置是从140+12开始，到300-21结束。如果设置不合理，有可能出现结束比开始的坐标还小，结果应该是无法显示。
+换句话说，如果一个子物件要完全根据上一级物件的缩放而缩放，那么应该偏移设置为0，那么anchor的具体位置也就是子物件的实际的4个角。在编辑器里面设置的时候，先把菊花的位置放好，然后把4个offset全部写成0。
+测试的时候的一个技巧，编辑器的主视口的右上，最后一个按钮是控制整个widget的尺寸的，进去第二个是custom，然后这个时候最大的那个框就可以调节了。
+
+3，hierarchy面板里面，对着任何一个点右键，有wrap with 和replace with。外面加东西是wrap with，去掉自己是replace with然后进去选child.
+
+4，细节面板最上面，is variable。
+
+5，如果一个子物件的最大尺寸不正确，外面包裹的是canvas，多半是canvas的offset不是0.
+
+6，最简单的那个text是不会占据一个范围的，在旁边放一个spacer帮它。
 
 c++里面写ui是一个重灾区，各种乱七八糟的东西。
 c++里面写的时候，在header里面无脑的include一下blueprint/widgettree.h，除非知道确实不用这个。widgettree是物体，不是namespace或者class definition。
