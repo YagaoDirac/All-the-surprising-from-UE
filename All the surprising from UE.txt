@@ -50,6 +50,23 @@ live reload: 编辑器里面，editor setting，General，Live Coding，然后在vs里面是ctr
 
 c++里面的函数和蓝图里面的函数的名字很不一样，基本上只有最常规的几个是一致的，其他都不一致。如果发现下断点了都得不到，要看看虚幻自带的可以用的那些里面是怎么写的，尤其是callback是哪几个。
 
+抄代码的时候一定要注意一个事情，就是有一些函数是必须在里面调用super版本的，而且还有时机问题。通常来说，如果自己写的时候，漏掉任何一个super调用，编辑器都有可能开不开。如遇此情况，请切莫惊慌，认真读报错。
+
+c++里面那blueprint的东西：
+https://www.reddit.com/r/unrealengine/comments/euenoj/is_it_possible_to_cast_to_a_blueprint_class_in_c/
+
+#include "UObject/ConstructorHelpers.h"
+GameInstance::GameInstance(const FObjectInitializer & ObjectInitializer)
+{
+    ConstructorHelpers::FClassFinder<ACharacter> 
+    CharacterBPClassFinder(TEXT("/Game/Path/To/CharacterBP"));
+    TSubclassOf<ACharacter> CharacterBPClass = CharacterBPClassFinder.Class;
+}
+// Now that you have the BP class reference you can store this in a (instance) variable and use it later on in another function to spawn your BP class:
+
+ACharacter* CharacterBPInstance  = GetWorld()->SpawnActor<ACharacter>(CharacterBPClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+另外一个可以找到这个的地方应该是visual assist的视频教程。
+
 
 
 shipping，packaging，release，cooking
