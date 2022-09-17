@@ -1,6 +1,6 @@
 虚幻的惊喜
 
-最后更新2022，aug，14
+最后更新2022，sep 8
 https://github.com/YagaoDirac/All-the-surprising-from-UE
 
 作者：yagaodirac
@@ -29,6 +29,7 @@ Visual Assist或者resharper。我现在还不清楚这个到底是怎么一回事，就看到的信息来说
 用va的话，不要关vs自带的intellisense。
 尝试尽量管掉虚幻里面的plugin。如果关错了，可以用记事本开虚幻的工程文件，找plugin browser一类的一个名字，写成true，就行了。
 va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚幻的插件，可以无脑的关，因为如果去虚幻里面关插件其实更麻烦。
+如果disable va，下一次开vs的时候，现实会异常，再开一次才行。
 
 安装的时候尽量在默认分区直接来，默认设置安装，安装以后不要移动任何文件，不然会出各种奇怪的bug。
 
@@ -37,6 +38,8 @@ va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚幻的插件，可以无脑的关，因
 
 
 c++
+
+首先要明确的一个问题，就是虚幻到底存在不存在纯蓝图的写法。我遇到过的一个情况是，一旦有一个东西需要接c++，剩下的几乎所有东西都需要有一个c++的代码，不然最终会拿不到变量或者调用不了函数。就是说，如果要在任何一个地方用c++，可能最好的做法是一开始就纯c++，蓝图套个皮，蓝图套这个皮的目的只是对接编辑器，可以往level里面放。
 
 关于虚幻宏，就是UPROPERTY那些，在文档里面的Programming and Scripting, Gameplay Architecture.
 虚幻宏里面用到的有几个，https://www.youtube.com/watch?v=TNSb6TJrl4U&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=5
@@ -66,6 +69,10 @@ GameInstance::GameInstance(const FObjectInitializer & ObjectInitializer)
 
 ACharacter* CharacterBPInstance  = GetWorld()->SpawnActor<ACharacter>(CharacterBPClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
 另外一个可以找到这个的地方应该是visual assist的视频教程。
+
+相关的宏：
+UCLASS不是必须的。
+GENERATED_BODY是不能定义c++原生的ctor的，GENERATED_UCLASS_BODY是可以的。文档里面都没说。所以抄作业的时候，一定要看清楚这个宏，可能还不止这2个版本。欢迎来github留言告诉我。
 
 
 
@@ -177,6 +184,7 @@ black board
 
 一个巨大的惊喜，没有数组。要用的话，自定义一个blueprint。
 官方在2015年的时候说过很快就会实现，反正今天2022年，写这个文档的时候，没有。
+c++的时候，有2个名字类似的基类，一个叫UBTTask_BlackboardBase，一个叫UBTTask_BlueprintBase。具体可以参考内建的UBTTask_MoveTo。核心是，如果需要blackboard key，应该是第一个。BlackboardBase好像是会自动生成几个核心调用函数，我觉得可以理解为不能在编辑器里面编辑逻辑的版本，而可以在蓝图里面编辑的应该是BlueprintBase。也就是对应编辑器里面的内建的，但是只能设置参数的，和，新建的，可以在里面写蓝图的。
 
 
 
@@ -273,6 +281,31 @@ Camera Modifier
 
 新建蓝图以后，找到functions，在overload里面，只有2个。其中有一个，输出需要一个结构体，make以后这个结构体的情况比较特殊，要在details里面勾选，相关的选项才会出现。
 用的方法是，player controller，里面的，player camera manager, 然后设置。
+预览里面如果看不到东西，可能是2d，然后方向不对，那个大sprite是单面的。
+
+
+
+Preview Scene Setting
+
+主菜单里面，Window，Preview Scene Setting。
+先说最重要的。如果preview在闪，找到PostProcessing, Lens, Exposure, 把里面的Min Brightness和Max Brightness打开，两个都写成1。
+其他的，PostProcessing, Lens, Exposure, Exposure Compensation可以考虑写成1.
+立方图在Environment里面。
+Lighting里面有一个Rotate开头的，可以旋转整个preview。
+
+
+
+Niagara, Particle
+
+youtube 有一个频道，CGHOW，稍微有点印度口音，不过应该有字幕。
+默认的时候，niagara fluids是不开的。一定记得开。
+niagara专用的node based编程应该不是蓝图。我感觉那个应该是类似计算图的，结果node应该是不能复制的，这个和材质是一样的，然后前面的都是关于数值的，白色的线不表示执行，应该是表示传递数据。反正我觉得这个事情很神奇，应该在ui上做出区别。
+如果preview在闪，参考 Preview Scene Setting 的部分。
+Niagara的接口是要分命名空间的，我看到的例子是User.parameter_name一类的，就是开头的User.，U是大写的，后面有一个点。然后在蓝图里面，niagara component上，set float parameter这样。这个写法好像和材质的差不多，只不过多一个命名空间。
+
+一个我没测试的。好像是说，在比较早的版本里面，蓝图要怎么和niagara交换数据。现在好像不用这么麻烦了。
+https://papersloth.hatenablog.com/entry/2020/08/01/112604
+
 
 
 K2（不推荐用这个）
