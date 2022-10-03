@@ -18,6 +18,8 @@ learn.unrealengine.com
 ¹Ù·½youtube£¬°üÀ¨live trainingÏµÁĞ¡£
 ue4community.wiki
 UE4 - Blueprints to C++ÏµÁĞ£¬ytÉÏ¡£Õâ¸öÏµÁĞµÄ×÷ÕßËµµÄrider for unreal±ÈvsÃ÷ÏÔ¸üºÃ£¬ËûÔÚÓÃ¡£·´ÕıÄãÃÇ²Î¿¼Ò»ÏÂ¡£
+https://unrealcpp.com/
+https://awforsythe.com/unreal/blueprints_vs_cpp/
 
 
 
@@ -39,7 +41,7 @@ vaµÄÑ¡ÏîÀïÃæÓĞÕë¶ÔĞé»ÃµÄÉèÖÃ£¬Ò»¶¨Òª¿ª¡£È»ºó¾ÍÊÇ¼ì²âĞé»ÃµÄ²å¼ş£¬¿ÉÒÔÎŞÄÔµÄ¹Ø£¬Òò
 
 c++
 
-Ê×ÏÈÒªÃ÷È·µÄÒ»¸öÎÊÌâ£¬¾ÍÊÇĞé»Ãµ½µ×´æÔÚ²»´æÔÚ´¿À¶Í¼µÄĞ´·¨¡£ÎÒÓöµ½¹ıµÄÒ»¸öÇé¿öÊÇ£¬Ò»µ©ÓĞÒ»¸ö¶«Î÷ĞèÒª½Óc++£¬Ê£ÏÂµÄ¼¸ºõËùÓĞ¶«Î÷¶¼ĞèÒªÓĞÒ»¸öc++µÄ´úÂë£¬²»È»×îÖÕ»áÄÃ²»µ½±äÁ¿»òÕßµ÷ÓÃ²»ÁËº¯Êı¡£¾ÍÊÇËµ£¬Èç¹ûÒªÔÚÈÎºÎÒ»¸öµØ·½ÓÃc++£¬¿ÉÄÜ×îºÃµÄ×ö·¨ÊÇÒ»¿ªÊ¼¾Í´¿c++£¬À¶Í¼Ì×¸öÆ¤£¬À¶Í¼Ì×Õâ¸öÆ¤µÄÄ¿µÄÖ»ÊÇ¶Ô½Ó±à¼­Æ÷£¬¿ÉÒÔÍùlevelÀïÃæ·Å¡£
+Ê×ÏÈÒªÃ÷È·µÄÒ»¸öÎÊÌâ£¬¾ÍÊÇĞé»Ãµ½µ×´æÔÚ²»´æÔÚ´¿À¶Í¼µÄĞ´·¨¡£ÎÒÓöµ½¹ıµÄÒ»¸öÇé¿öÊÇ£¬Ò»µ©ÓĞÒ»¸ö¶«Î÷ĞèÒª½Óc++£¬Ê£ÏÂµÄ¼¸ºõËùÓĞ¶«Î÷¶¼ĞèÒªÓĞÒ»¸öc++µÄ´úÂë£¬²»È»×îÖÕ»áÄÃ²»µ½±äÁ¿»òÕßµ÷ÓÃ²»ÁËº¯Êı¡£¾ÍÊÇËµ£¬Èç¹ûÒªÔÚÈÎºÎÒ»¸öµØ·½ÓÃc++£¬¿ÉÄÜ×îºÃµÄ×ö·¨ÊÇÒ»¿ªÊ¼¾Í´¿c++£¬À¶Í¼Ì×¸öÆ¤£¬À¶Í¼Ì×Õâ¸öÆ¤µÄÄ¿µÄÖ»ÊÇ¶Ô½Ó±à¼­Æ÷£¬¿ÉÒÔÍùlevelÀïÃæ·Å¡£³ı·ÇÖ»ÊÇºÜ¼òµ¥µÄÄÃÒ»ÏÂÀ¶Í¼µÄÀàÔÚc++ÀïÃæÓÃ£¬ÄÇ¿ÉÒÔ¿¼ÂÇÔÚc++ÀïÃæÄÃÀ¶Í¼µÄÀà£¬µ«ÊÇÕâ¸ö×ö·¨ÓÀÔ¶ÓĞÒ»¸öÎÊÌâ£¬¾ÍÊÇÖ®ºó¼ÌĞøÍùÏÂĞ´µÄÊ±ºò£¬Ëµ²»¶¨Ê²Ã´Ê±ºò¾Í±ä³ÉĞèÒª¸Ä·Ç³£¶à¶«Î÷£¬Óöµ½¹ıÒ»´Î¡£
 
 ¹ØÓÚĞé»Ãºê£¬¾ÍÊÇUPROPERTYÄÇĞ©£¬ÔÚÎÄµµÀïÃæµÄProgramming and Scripting, Gameplay Architecture.
 Ğé»ÃºêÀïÃæÓÃµ½µÄÓĞ¼¸¸ö£¬https://www.youtube.com/watch?v=TNSb6TJrl4U&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=5
@@ -55,7 +57,8 @@ c++ÀïÃæµÄº¯ÊıºÍÀ¶Í¼ÀïÃæµÄº¯ÊıµÄÃû×ÖºÜ²»Ò»Ñù£¬»ù±¾ÉÏÖ»ÓĞ×î³£¹æµÄ¼¸¸öÊÇÒ»ÖÂµÄ£¬ÆäË
 
 ³­´úÂëµÄÊ±ºòÒ»¶¨Òª×¢ÒâÒ»¸öÊÂÇé£¬¾ÍÊÇÓĞÒ»Ğ©º¯ÊıÊÇ±ØĞëÔÚÀïÃæµ÷ÓÃsuper°æ±¾µÄ£¬¶øÇÒ»¹ÓĞÊ±»úÎÊÌâ¡£Í¨³£À´Ëµ£¬Èç¹û×Ô¼ºĞ´µÄÊ±ºò£¬Â©µôÈÎºÎÒ»¸ösuperµ÷ÓÃ£¬±à¼­Æ÷¶¼ÓĞ¿ÉÄÜ¿ª²»¿ª¡£ÈçÓö´ËÇé¿ö£¬ÇëÇĞÄª¾ª»Å£¬ÈÏÕæ¶Á±¨´í¡£
 
-c++ÀïÃæÄÇblueprintµÄ¶«Î÷£º
+c++ÀïÃæÄÇblueprintµÄ¶«Î÷£¬Ìá¹©3¸ö°æ±¾¡£
+°æ±¾1£º
 https://www.reddit.com/r/unrealengine/comments/euenoj/is_it_possible_to_cast_to_a_blueprint_class_in_c/
 
 #include "UObject/ConstructorHelpers.h"
@@ -68,11 +71,37 @@ GameInstance::GameInstance(const FObjectInitializer & ObjectInitializer)
 // Now that you have the BP class reference you can store this in a (instance) variable and use it later on in another function to spawn your BP class:
 
 ACharacter* CharacterBPInstance  = GetWorld()->SpawnActor<ACharacter>(CharacterBPClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-ÁíÍâÒ»¸ö¿ÉÒÔÕÒµ½Õâ¸öµÄµØ·½Ó¦¸ÃÊÇvisual assistµÄÊÓÆµ½Ì³Ì¡£
+°æ±¾2£ºvisual assistµÄÊÓÆµ½Ì³Ì¡£
+°æ±¾3£º5ÀïÃæ×Ô´øµÄÄ£°åÀïÃætopdown£¬c++¹¤³Ì£¬ÀïÃægamemodeµÄcppÎÄ¼şÀïÃæ¡£
+static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownCharacter"));
+if (PlayerPawnBPClass.Class != nullptr)
+{
+	DefaultPawnClass = PlayerPawnBPClass.Class;
+}
+
+static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownPlayerController"));
+if(PlayerControllerBPClass.Class != NULL)
+{
+	PlayerControllerClass = PlayerControllerBPClass.Class;
+}
 
 Ïà¹ØµÄºê£º
 UCLASS²»ÊÇ±ØĞëµÄ¡£
 GENERATED_BODYÊÇ²»ÄÜ¶¨Òåc++Ô­ÉúµÄctorµÄ£¬GENERATED_UCLASS_BODYÊÇ¿ÉÒÔµÄ¡£ÎÄµµÀïÃæ¶¼Ã»Ëµ¡£ËùÒÔ³­×÷ÒµµÄÊ±ºò£¬Ò»¶¨Òª¿´Çå³şÕâ¸öºê£¬¿ÉÄÜ»¹²»Ö¹Õâ2¸ö°æ±¾¡£»¶Ó­À´githubÁôÑÔ¸æËßÎÒ¡£
+
+
+
+visual studio, vs
+
+¾ÍÒ»¸öÊÂÇé£¬f12µÄÊ±ºò»áÏÔÊ¾ËÑË÷Ãæ°å£¬¶ø²»ÊÇÀàÊÓÍ¼£¨class view£©£¬²»Òª¸ã»ìÁË¡£class viewÊÇÓÀÔ¶¿ÉÒÔÓÃµÄ¡£
+
+
+
+visual assist£¬ va
+
+Ñ¡ÏîÀïÃæĞé»ÃÖ§³ÖÄÇÒ»À¸£¬4¸öcheckboxÈ«²¿¹´ÉÏ£¬Ê£ÏÂµÄÒ»¸öµÚÒ»¸ö£¬Ò»¸öµÚ¶ş¸ö£¬¾ßÌåÄÄ¸öÍüÁË¡£ÎÒ¼ÇµÃ¹Ù·½ºÃÏñ¾ÍÊÇÕâÃ´¹´Ñ¡µÄ¡£µ«ÊÇÕâ¸ö²»ÊÇÄ¬ÈÏ¡£
+ºÃÏñÓĞÒ»¸öÊÇ¿ÉÒÔ¿ª¹ØºìÉ«²¨ÀËÏßµÄ£¬ÎÒÕÒµ½ÁËÔÙÀ´¸üĞÂ¡£
+¸öÈËÍÆ¼ö°ÑparseĞé»Ã²å¼şµÄÄÇ¸öµØ·½Ñ¡³Éall¡£
 
 
 
@@ -196,6 +225,7 @@ navmesh±¾ÉíÄÚÈİ²»¶à£¬¹Ù·½ÎÄµµ²»³¤¡£ĞèÒª¼Ç×¡µÄÊÂÇéÖ÷ÒªÊÇ£º
 3£¬¿ÉÒÔÉèÖÃ¶¯Ì¬µÄnavmesh£¬²»¹ıºÃÏñÃ»Ê²Ã´ÓÃ¡£¶¯Ì¬ÏÂ²»ÖªµÀÄÜ²»ÄÜÉèÖÃ´ú¼Û£¬Ã»²âÊÔ¡£
 4£¬aiÔÚnavmeshÀïÃæÒÆ¶¯£¬ÔÚÀ¶Í¼ÀïÃæµÄ½ÚµãÊÇAI Move To£¬²»ÊÇ³£¹æµÄº¯Êı½Úµã£¬¸üÏñÊÇÒ»¸öºê£¬ÓÒÉÏ½ÇÓĞÊ±ÖÓÍ¼±ê¡£
 5, https://forums.unrealengine.com/t/how-do-i-get-the-navigation-path-to-a-point/294257/4
+c++ÀïÃæÒªÔÚBuild.csÎÄ¼şÀïÃæ¼ÓÒ»¾äPublicDependencyModuleNames.AddRange(new string[] { ÆäËû²»±ä£¬¼ÓÉÏ "NavigationSystem" , "AIModule"});¡£¾ßÌå²Î¿¼topdownÄ£°å¡£
 
 
 
@@ -305,6 +335,16 @@ NiagaraµÄ½Ó¿ÚÊÇÒª·ÖÃüÃû¿Õ¼äµÄ£¬ÎÒ¿´µ½µÄÀı×ÓÊÇUser.parameter_nameÒ»ÀàµÄ£¬¾ÍÊÇ¿ªÍ·
 
 Ò»¸öÎÒÃ»²âÊÔµÄ¡£ºÃÏñÊÇËµ£¬ÔÚ±È½ÏÔçµÄ°æ±¾ÀïÃæ£¬À¶Í¼ÒªÔõÃ´ºÍniagara½»»»Êı¾İ¡£ÏÖÔÚºÃÏñ²»ÓÃÕâÃ´Âé·³ÁË¡£
 https://papersloth.hatenablog.com/entry/2020/08/01/112604
+
+niagara±à¼­Æ÷±¾Ìå£¬ÀïÃæ£¬emitter£¬È»ºóparticle£¬Ãû×ÖºóÃæÓĞ2¸ö£¬Ò»¸öÊÇspawn£¬Ò»¸öÊÇupdate¡£particle spawnºÜºÃÀí½â£¬Ã¿¸öÉú³ÉµÄÊ±ºòÔËĞĞÕâ¸ö¡£Ê£ÏÂµÄ£¬emitter spawn²»ÊÇºÜÃ÷°×Ê²Ã´ÒâË¼¡£È»ºóÁ½¸öupdate£¬ÓĞÒ»Ğ©ÊÇÖ±½ÓÉèÖÃ£¬»¹ÓĞÒ»Ğ©ÊÇÍùÉÏ¼Ó£¬±ÈÈç£¨Ã»²âÊÔ£©ÔÚparticle updateÀïÃæĞ´£¬hue shift linear color£¬Õâ¸öÀïÃæµÄÖµÓ¦¸ÃÊÇÀÛ¼ÓµÄÄÇÖÖ¡££¨ĞèÒª²âÊÔ£©
+
+ÓĞÒ»¸öÊÇset parameter£¬ÉèÖÃÁËÒÔºó¿ÉÒÔÔÚ±ğµÄµØ·½°ó¶¨¡£
+rangeÊÇÒ»¸övec2£¬·Ö±ğ¶ÔÓ¦minºÍmax¡£
+
+scratch pad´«¶«Î÷¸ø²ÄÖÊÊÇÍ¨¹ıset½ÚµãµÄ£¬dynamic material parameter¡£²ÄÖÊÀïÃæ¶ÔÓ¦¾ÍÊÇdynamic parameter¡£ËÆºõ»¹ÓĞÒ»¸ö²½Öè£¬¾ÍÊÇ£¬ÔÚniagaraµÄrenderÀïÃæ£¬ÓĞÒ»¸öbindings£¬ÉèÖÃÕâ¸ö£¬°Ñ±äÁ¿´Óniagara¸øµ½²ÄÖÊ¡£
+²ÄÖÊÀïÃæ»¹Ò»¸ö³£ÓÃµÄ£¬´ÓniagaraÄÃ¶«Î÷µÄ£¬¾ÍÊÇparticle ***ÕâÑù£¬±ÈÈçparticle color¡£
+
+ºÃÏñËùÓĞ¶«Î÷¶¼¿ÉÒÔÓÃscratch Ê²Ã´Ê²Ã´£¬¶¼¿ÉÒÔ½øÈ¥Ğ´¡£
 
 
 
