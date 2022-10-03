@@ -1,0 +1,146 @@
+虚幻c++
+
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+
+
+General
+
+不是要吵架，很多人觉得自己可以随手写蓝图了，觉得自己已经是很有经验的虚幻程序员了，但是其实这个是技术策划的技能。如果你的电脑不能轻松跑虚幻加一个vs，比如今天（2022），如果你的电脑没有32g内存，那么几乎可以肯定你没有足够的虚幻c++的能力。或者换句话说，如果你的电脑没有32g内存，你可以先不读这个文档了，因为暂时没办法真的使用，可以考虑先研究编辑器内的功能，也不少了。
+
+虚幻很喜欢崩溃，所以所有地方都要做安全设计，反正就是一路if就完事了，不然重新开编辑器很浪费时间。所以m2的ssd，很大的cpu，还是很重要的。
+
+大方向是，c++可以给几乎一切的东西给蓝图，包括变量和函数。但是蓝图只能按类暴露给c++，几乎只有一个rtti的效果，基本上这个只能用于创建物体。编辑器里面也可以直接拿c++的结果往level里面放，所以理论上是可以在完全不用蓝图的情况下做东西的。实际上我的意见是，应该尽量限制蓝图的使用。于是，蓝图转c++的技术就尤为重要。这个文档里面记录了一些，包括docs里面，包括后面有一段专门讲这个。
+
+
+
+docs for c++
+
+官方youtube，包括live training系列。
+UE4 - Blueprints to C++系列，yt上。这个系列的作者说的rider for unreal比vs明显更好，他在用。反正你们参考一下。
+https://unrealcpp.com/
+https://awforsythe.com/unreal/blueprints_vs_cpp/
+
+官方文档的搜索里面是可以按类型搜索的，有一个是c++。
+每一个类应该都有一个对应的页面，这个页面上最常用的是最上面的，一个是所在的模组，也就是Build.cs里面，必须要把这个模组名字加进去，这个细节经常出问题，据说相关的报错是什么找不到相关文件，需要注意的是，有个别的东西是需要超过一个的，因为有可能牵扯好几个类，比如NavigationSystem还需要一个AIModule。另外就是那句include，复制就完事。
+
+
+
+setup
+
+官方文档里面有一个how to set up visual studio for unreal engine。现在的安装和以前好像不一样了。反正照做就完事了。
+
+Visual Assist或者resharper。我现在还不清楚这个到底是怎么一回事，就看到的信息来说，va好像比较流行。可能这个信息是这个文档最最重要的一个。
+用va的话，不要关vs自带的intellisense。
+尝试尽量管掉虚幻里面的plugin。如果关错了，可以用记事本开虚幻的工程文件，找plugin browser一类的一个名字，写成true，就行了。
+va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚幻的插件，可以无脑的关，因为如果去虚幻里面关插件其实更麻烦。
+如果disable va，下一次开vs的时候，现实会异常，再开一次才行。
+
+安装的时候尽量在默认分区直接来，默认设置安装，安装以后不要移动任何文件，不然会出各种奇怪的bug。
+
+除了vs加va的组合，还有rider for unreal。
+
+
+
+c++
+
+首先要明确的一个问题，就是虚幻到底存在不存在纯蓝图的写法。我遇到过的一个情况是，一旦有一个东西需要接c++，剩下的几乎所有东西都需要有一个c++的代码，不然最终会拿不到变量或者调用不了函数。就是说，如果要在任何一个地方用c++，可能最好的做法是一开始就纯c++。除非只是很简单的拿一下蓝图的类在c++里面用，那可以考虑在c++里面拿蓝图的类，但是这个做法永远有一个问题，就是之后继续往下写的时候，说不定什么时候就变成需要改非常多东西，遇到过一次。
+
+关于虚幻宏，就是UPROPERTY那些，在文档里面的Programming and Scripting, Gameplay Architecture. 记不到了就搜UPROPERTY，相关的页面都在附近。
+虚幻宏里面用到的有几个，https://www.youtube.com/watch?v=TNSb6TJrl4U&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=5
+里面讲了，但是我还是重复一下。blueprint readonly和readwrite，是在蓝图里面能不能得到set。edit，visible，这个是只能看和可以编辑，后面的default，instance，是指，蓝图里面的variable default，和，外面的level里面的instance的参数。
+然后还有一个超级无敌重要的，meta里面的display name。如果看到这个了，一定要留意，这个带来无数的惊喜，非常的恶心。
+
+live reload: 编辑器里面，editor setting，General，Live Coding，然后在vs里面是ctrl alt f11.
+在vs里面，配置上选第二个，应该是development editor，然后点开始测试，就会自己开一个编辑器，可以下断点看编辑器里面是在干嘛。
+
+继承的关系。比如本来是AActor，然后直接套蓝图，现在需要在中间写一个c++类，那么这个c++类是从AActor继承，然后新的蓝图是套在新的c++类上，也就是说，手写的c++的继承层级是在本来的空白逻辑的基类和蓝图类之间。在behavior tree上给节点写c++版本的时候，要从这些节点能继承的类上继承c++类，不要从c++类层级里面去猜。
+
+c++里面的函数和蓝图里面的函数的名字很不一样，基本上只有最常规的几个是一致的，其他都不一致。如果发现下断点了都得不到，要看看虚幻自带的可以用的那些里面是怎么写的，尤其是callback是哪几个。
+
+抄代码的时候一定要注意一个事情，就是有一些函数是必须在里面调用super版本的，而且还有时机问题。通常来说，如果自己写的时候，漏掉任何一个super调用，编辑器都有可能开不开。如遇此情况，请切莫惊慌，认真读报错。
+
+c++里面那blueprint的东西，提供3个版本。
+版本1：
+https://www.reddit.com/r/unrealengine/comments/euenoj/is_it_possible_to_cast_to_a_blueprint_class_in_c/
+
+#include "UObject/ConstructorHelpers.h"
+GameInstance::GameInstance(const FObjectInitializer & ObjectInitializer)
+{
+    ConstructorHelpers::FClassFinder<ACharacter> 
+    CharacterBPClassFinder(TEXT("/Game/Path/To/CharacterBP"));
+    TSubclassOf<ACharacter> CharacterBPClass = CharacterBPClassFinder.Class;
+}
+// Now that you have the BP class reference you can store this in a (instance) variable and use it later on in another function to spawn your BP class:
+
+ACharacter* CharacterBPInstance  = GetWorld()->SpawnActor<ACharacter>(CharacterBPClass, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+版本2：visual assist的视频教程。
+版本3：5里面自带的模板里面topdown，c++工程，里面gamemode的cpp文件里面。
+static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownCharacter"));
+if (PlayerPawnBPClass.Class != nullptr)
+{
+	DefaultPawnClass = PlayerPawnBPClass.Class;
+}
+
+static ConstructorHelpers::FClassFinder<APlayerController> PlayerControllerBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownPlayerController"));
+if(PlayerControllerBPClass.Class != NULL)
+{
+	PlayerControllerClass = PlayerControllerBPClass.Class;
+}
+
+相关的宏：
+UCLASS不是必须的。
+GENERATED_BODY是不能定义c++原生的ctor的，GENERATED_UCLASS_BODY是可以的。文档里面都没说。所以抄作业的时候，一定要看清楚这个宏，可能还不止这2个版本。欢迎来github留言告诉我。
+
+
+
+visual studio, vs
+
+f12的时候会显示搜索面板，而不是类视图（class view），不要搞混了。class view是永远可以用的，只是有时候会卡个10多秒。
+如果是vs2022，可以把live coding关了。editor preference里面。就用vs的build。
+
+
+
+visual assist，va
+
+选项里面虚幻支持那一栏，4个checkbox全部勾上，剩下的一个第一个，一个第二个，具体哪个忘了。我记得官方好像就是这么勾选的。但是这个不是默认。
+好像有一个是可以开关红色波浪线的，我找到了再来更新。
+个人推荐把parse虚幻插件的那个地方选成all。
+
+
+
+新建各种物体
+
+虚幻里面一个比较烦的事情就是很多东西不统一。不写全了。
+newobject - uobject
+createdefaultsubobject - 所有的component
+
+
+
+蓝图转c++
+
+这个部分假设你已经足够了解虚幻的编辑器内的功能，至少可以很熟练的写蓝图。
+
+现在只知道怎么蓝图到c++，不清楚其他的，比如什么行为树里面那些。
+对着蓝图节点右键，go to definition，然后vs里面会自动定位。通常来说，这个函数就是要用的函数了，无论他是k2版本还是什么别的版本。
+此外你还需要做一个事情，就是找到这个函数的定义，也就是header里面的那一句。你可以利用的有vs的类视图（注意不要换搜索面板搞混了），另外就是虚幻的代码的拜访还是比较规则的，从文件浏览器里面去找应该也很快。找到这个主要是要看它的UFUNCTION，里面确认清楚所有的东西的含义。我已知的一个很重要的是meta里面有一个什么什么worldcontext，然后这种情况一般第一个形参是一个UObject*，这个地方就是要穿当前的world进去。蓝图里面应该是自动解决了，但是c++里面就只有手动。这个world context通常可以直接利用AActor::GetWorld()直接得到。有一些函数还会额外的增加一个什么什么context的形参给蓝图，可以利用c++代码来确认其中的关系。此外就是记住，controller是从actor继承出来的，所以也可以得到这个函数。如果get world出来的是空，那你可能需要等一下，利用delay。
+
+Delay的做法在网上有，总的来说，个人不推荐lambda expression，也可能是可行的。在类里面另外写一个函数，然后命名上面稍微注意一点。反正我的习惯是 OriginFunctionName_DelayCB_1，然后2，3。这样的好处是写法会比较连贯。vs会提醒，要用&在函数名字前面来得到函数的指针，我总觉得这个是c++的一个bug，反正能用就完事了。然后这个情景下，要用形参里面有this的版本。不用关心函数的那个具体类型，void进void出肯定是可以用的（所以写成类的成员函数比较方便。
+
+ai move to应该是一个蓝图的宏，然后c++里面，网上也说了，是simple 什么什么，然后可能要自己手动处理后续的部分。
+
+
+
+K2（不推荐用这个）
+
+网上有制作K2版本的函数的资料，但是不推荐真的在项目里面用。
+K2据说是以前虚幻很早的版本里面的kismet2.0，它的接班人是蓝图。通常的说法是k2开头的函数是蓝图里面调用的时候所调用的版本，在c++里面不用碰他们。这一块资料非常少。AddActorWorldOffset就是其中一个。
+
+
+
+
+
