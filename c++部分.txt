@@ -14,7 +14,7 @@ General
 
 虚幻很喜欢崩溃，所以所有地方都要做安全设计，反正就是一路if就完事了，不然重新开编辑器很浪费时间。所以m2的ssd，很大的cpu，还是很重要的。
 
-大方向是，c++可以给几乎一切的东西给蓝图，包括变量和函数。但是蓝图只能按类暴露给c++，几乎只有一个rtti的效果，基本上这个只能用于创建物体。编辑器里面也可以直接拿c++的结果往level里面放，所以理论上是可以在完全不用蓝图的情况下做东西的。实际上我的意见是，应该尽量限制蓝图的使用。于是，蓝图转c++的技术就尤为重要。这个文档里面记录了一些，包括docs里面，包括后面有一段专门讲这个。
+大方向是，c++可以给几乎一切的东西给蓝图，包括变量和函数。但是蓝图只能按类暴露给c++，几乎只有一个rtti的效果，基本上这个只能用于创建物体。我看到过一点点关于怎么在c++里面调用蓝图里面的函数的资料，但是没有深入，不知道能不能用。编辑器里面也可以直接拿c++的结果往level里面放，所以理论上是可以在完全不用蓝图的情况下做东西的。实际上我的意见是，应该尽量限制蓝图的使用。于是，蓝图转c++的技术就尤为重要。这个文档里面记录了一些，包括docs里面，包括后面有一段专门讲这个。
 
 
 
@@ -46,7 +46,32 @@ va的选项里面有针对虚幻的设置，一定要开。然后就是检测虚
 
 
 
-c++
+循环包含，header和cpp文件的具体用法：
+
+c++这个语言是有针对循环包含的解决方案的。
+在header里面，使用前向声明，而不是包含header。包括继承的来源，所有只需要知道名字而不需要知道内容的类，这几乎包含了所有。也就是说整个header的格式应该是：
+无论如何跑不掉的header
+前向声明
+全局函数（无论在不在namespace里面）
+类声明
+特殊的，在虚幻里面，无论如何跑不掉的header应该只有2个：
+#include "CoreMinimal.h"
+#include 一个什么头文件，这个也是自动生成的。个别时候如果把这个单独移动到cpp文件里面会出错，所以理论上也可以不动。
+#include "[Filename here].generated.h"//这个是自动生成的，不要动，但是必须在最后一个。
+
+之后是cpp的格式。
+所有在header里面声明的全局函数和类，都是没有定义的，或者用我的话说就是只有函数和类的头，没有身体，所有的身体都在cpp文件里面。
+由于这些定义基本都需要用到各种东西的内部表示，所以cpp文件需要包含很多很多很多东西。通常来说，cpp文件的格式是：
+一大堆的包含
+定义
+特殊的，在虚幻里面，包含里面第一个必须是对应的header。
+
+也就是说，如果你的header里面包含了一堆东西，这个应该是纯c++就没有研究清楚，和虚幻无关，拿到纯c++工程里面也会出问题。
+另外一个细节，vs2022可以检测循环包含，有对应的报错。没有这个功能的IDE会给你说，有一堆类，重复定义，如果你觉得这个报错信息等于开玩笑，那你就要怀疑是不是循环包含了。
+
+
+
+misc
 
 首先要明确的一个问题，就是虚幻到底存在不存在纯蓝图的写法。我遇到过的一个情况是，一旦有一个东西需要接c++，剩下的几乎所有东西都需要有一个c++的代码，不然最终会拿不到变量或者调用不了函数。就是说，如果要在任何一个地方用c++，可能最好的做法是一开始就纯c++。除非只是很简单的拿一下蓝图的类在c++里面用，那可以考虑在c++里面拿蓝图的类，但是这个做法永远有一个问题，就是之后继续往下写的时候，说不定什么时候就变成需要改非常多东西，遇到过一次。
 
@@ -55,8 +80,8 @@ c++
 里面讲了，但是我还是重复一下。blueprint readonly和readwrite，是在蓝图里面能不能得到set。edit，visible，这个是只能看和可以编辑，后面的default，instance，是指，蓝图里面的variable default，和，外面的level里面的instance的参数。
 然后还有一个超级无敌重要的，meta里面的display name。如果看到这个了，一定要留意，这个带来无数的惊喜，非常的恶心。
 
-live reload: 编辑器里面，editor setting，General，Live Coding，然后在vs里面是ctrl alt f11.
-在vs里面，配置上选第二个，应该是development editor，然后点开始测试，就会自己开一个编辑器，可以下断点看编辑器里面是在干嘛。
+live reload: 编辑器里面，editor setting，General，Live Coding，然后在vs里面是ctrl alt f11，报错里面有提示。但是最新的一个思路是，在vs2022里面不用live coding，有时候会出问题。
+在vs里面，配置上选第二个，应该是development editor，然后点开始测试，就会自己开一个编辑器，可以下断点看编辑器里面是在干嘛。不过新工程的默认配置是第4个，Development Editor。
 
 继承的关系。比如本来是AActor，然后直接套蓝图，现在需要在中间写一个c++类，那么这个c++类是从AActor继承，然后新的蓝图是套在新的c++类上，也就是说，手写的c++的继承层级是在本来的空白逻辑的基类和蓝图类之间。在behavior tree上给节点写c++版本的时候，要从这些节点能继承的类上继承c++类，不要从c++类层级里面去猜。
 
@@ -64,7 +89,24 @@ c++里面的函数和蓝图里面的函数的名字很不一样，基本上只�
 
 抄代码的时候一定要注意一个事情，就是有一些函数是必须在里面调用super版本的，而且还有时机问题。通常来说，如果自己写的时候，漏掉任何一个super调用，编辑器都有可能开不开。如遇此情况，请切莫惊慌，认真读报错。
 
-c++里面那blueprint的东西，提供3个版本。
+
+
+tsubclassof
+
+这个还要慢慢研究。总之就是，编辑器里面的variable可以有4个形式，第一个是实例的ref，第二个是类型，这个tsubclassof就是对应的这个第二个。
+
+
+
+ConstructorHelper:
+
+关于资源的名字的格式，我见过的至少有3个，
+/Game/[path here]/Name这个没试过，不清楚。
+/Game/[path here]/Name.Name 可以用于staticmesh, material instance
+/Game/[path here]/Name.Name_C 可以用于widget
+这个就很虚幻作风了。
+看例子的时候一定要注意这个命名，但是我不保证正确。
+
+ConstructorHelpers::FClassFinder，提供3个版本。
 版本1：
 https://www.reddit.com/r/unrealengine/comments/euenoj/is_it_possible_to_cast_to_a_blueprint_class_in_c/
 
@@ -92,7 +134,27 @@ if(PlayerControllerBPClass.Class != NULL)
 	PlayerControllerClass = PlayerControllerBPClass.Class;
 }
 
+此外，拿资源类的， ConstructorHelpers::FObjectFinder：
+static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereVisualAsset(TEXT("/Game/StarterContent/Shapes/Shape_Sphere.Shape_Sphere"));
+
+
+
+最近一个好像可行的例子：
+static ConstructorHelpers::FClassFinder<UUserWidget> MyWidgetClassRef(TEXT("/Game/TutoLevel/TutoWidgetClosingShops.TutoWidgetClosingShops_C"));
+if (MyWidgetClassRef.Succeeded())
+{
+	WidgetClass = MyWidgetClassRef.Class;
+}
+我怀疑类似的方法应该也可能找材质，niagara那些。没试过。
+
+还有网友提供了一个
+I ran into something similar to this where it wouldn’t find blueprints when I deployed to Android. Hopefully the fix is the same for you: in your project/Config folder look for DefaultEditor.ini, change bDontLoadBlueprintOutsideEditor=true to bDontLoadBlueprintOutsideEditor=false.
+（https://forums.unrealengine.com/t/cdo-constructor-failed-to-find-blueprint-ue-4-4/291217）2楼。
+
+
+
 相关的宏：
+
 UCLASS不是必须的。
 GENERATED_BODY是不能定义c++原生的ctor的，GENERATED_UCLASS_BODY是可以的。文档里面都没说。所以抄作业的时候，一定要看清楚这个宏，可能还不止这2个版本。欢迎来github留言告诉我。
 
@@ -102,6 +164,7 @@ visual studio, vs
 
 f12的时候会显示搜索面板，而不是类视图（class view），不要搞混了。class view是永远可以用的，只是有时候会卡个10多秒。
 如果是vs2022，可以把live coding关了。editor preference里面。就用vs的build。
+关于无法得到断点，有2个事情可以尝试，1是加一句PRAGMA_DISABLE_OPTIMIZATION，好像是要加在文件的开头。2是，vs里面的，tools，option，debug，general，右边有一个，requires source files to exactly match the origin version，关掉。
 
 
 
@@ -132,6 +195,21 @@ createdefaultsubobject - 所有的component
 Delay的做法在网上有，总的来说，个人不推荐lambda expression，也可能是可行的。在类里面另外写一个函数，然后命名上面稍微注意一点。反正我的习惯是 OriginFunctionName_DelayCB_1，然后2，3。这样的好处是写法会比较连贯。vs会提醒，要用&在函数名字前面来得到函数的指针，我总觉得这个是c++的一个bug，反正能用就完事了。然后这个情景下，要用形参里面有this的版本。不用关心函数的那个具体类型，void进void出肯定是可以用的（所以写成类的成员函数比较方便。
 
 ai move to应该是一个蓝图的宏，然后c++里面，网上也说了，是simple 什么什么，然后可能要自己手动处理后续的部分。
+
+
+
+UMG, widget, uuserwidget, UI
+
+这个简直超级无敌虚幻作风，脑筋急转弯的极致。
+先上参考资料。连续的4个视频，从13到16。
+https://www.youtube.com/watch?v=2Vu1Wn1O3WI&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=13
+Mike Stevanovic提供的一个思路是，先制作一个编辑器里面的widget，然后新建一个c++上的继承自uuserwidget的类，然后在编辑器里面re parent，或者在class default还是什么面板里面找那个parent class，设置过去，一样的。先在编辑器里面增加控件，比如button，勾上Is Variable，然后在header里面用UPROPERTY(BlueprintReadWrite, meta = (BindWidget))，编译，编辑器里面的variable面板上的对应的variable就会消失。这样至少不会崩溃。
+另外一个细节就是，如果要指定一个类，要用tsubclassof。如果直接用uuserwidget*，编译的时候，蓝图里面的默认设置可能会被重置为空。
+给控件绑定的事件必须是UFUNCTION，括号里面可以空。
+比如：
+button->OnClicked.AddDynamic(this, &[the class name here]::[the callback function here]);
+
+但是至于如何正确的创建控件，还要稍微研究一下。
 
 
 
