@@ -200,11 +200,6 @@ anchor是10%到50%，子物件从anchor开始的偏移是12和-21。
 
 6，如果一个子物件没有尺寸，又需要控制它的尺寸，可以利用的东西是，在旁边放一个spacer，或者在外面套一个sizer或者border。我遇到过的一个情况是，最简单的那个text是不会占据一个尺寸的，在旁边放一个spacer帮它撑住那个空间，防止多个text重叠。这个技巧在vertical box和horizontal box里面有一些奇怪的东西的时候可能会见奇效。
 
-c++里面写ui是一个重灾区，各种乱七八糟的东西。
-c++里面写的时候，在header里面无脑的include一下blueprint/widgettree.h，除非知道确实不用这个。widgettree是物体，不是namespace或者class definition。
-c++里面的函数是native开头的，nativexxx这种。没有UFUNCTION标记。
-meta = (BindWidget)，还是WidgetBind，忘了。
-
 
 
 Gameplay Tag system
