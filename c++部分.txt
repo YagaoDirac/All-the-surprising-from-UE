@@ -9,7 +9,7 @@ twitter：yagaodirac
 
 
 to do list:
-c++里面创建UI的具体控件。
+动态改UI控件的外观：
 
 
 
@@ -20,6 +20,8 @@ General
 虚幻很喜欢崩溃，所以所有地方都要做安全设计，反正就是一路if就完事了，不然重新开编辑器很浪费时间。所以m2的ssd，很大的cpu，还是很重要的。
 
 大方向是，c++可以给几乎一切的东西给蓝图，包括变量和函数。但是蓝图只能按类暴露给c++，几乎只有一个rtti的效果，基本上这个只能用于创建物体。我看到过一点点关于怎么在c++里面调用蓝图里面的函数的资料，但是没有深入，不知道能不能用。编辑器里面也可以直接拿c++的结果往level里面放，所以理论上是可以在完全不用蓝图的情况下做东西的。实际上我的意见是，应该尽量限制蓝图的使用。于是，蓝图转c++的技术就尤为重要。这个文档里面记录了一些，包括docs里面，包括后面有一段专门讲这个。
+
+overload任何函数的时候，进去先写super::函数名（所有参数），除非确认到没有这个。
 
 
 
@@ -104,7 +106,7 @@ c++里面的函数和蓝图里面的函数的名字很不一样，基本上只�
 
 tsubclassof
 
-这个还要慢慢研究。总之就是，编辑器里面的variable可以有4个形式，第一个是实例的ref，第二个是类型，这个tsubclassof就是对应的这个第二个。
+这个还要慢慢研究。总之就是，编辑器里面的variable可以有4个形式（built in type除外），第一个是实例的ref，多半对应的是有UPROPERTY的指针，第二个是类型，这个tsubclassof就是对应的这个第二个。
 
 
 
@@ -236,15 +238,17 @@ c++里面的函数是native开头的，nativexxx这种。没有UFUNCTION标记�
 
 确认一个UI是否有在显示，除了可见性，还有一个就是IsInViewport，多半是uuserwidget里面的一个方法。
 
-找到个视频，
+找到个视频，我暂时不深入了，暂时留着。
 https://www.youtube.com/watch?v=T7v3UnL6PNU
 里面提到有3个方式可以做UI
 第一个是AHUD类，但是好像没办法做很复杂的东西。
 第二个是Slate系统，
 第三个是UMG
 
+
 待确认：
 sizebox有一个选项，size to content，不知道是不是和text也会有相互作用。
+有一个全局的类，UWidgetLayoutLibrary，里面可能有一些有用的东西。
 
 
 
@@ -261,6 +265,17 @@ UI的类，主要有2个，一个是UWidget，一个是UUserWidget。编辑器�
 UButton* btn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
 btn->AddToRoot();
 在NativeOnInitialized()里面。如果放到NativeConstruct里面会显示不出来。不清楚其中的区别。
+亲测，这个btn不用标记UPROPERTY。
+
+
+
+动态改UI控件的外观：
+
+查到一个，UWidget里面有一个东西叫slot。另外一个说法是，好像可以用动画功能来做。
+现在查到的比较靠谱的事情是：
+如果是一个CanvasPanel里面有一个Button（只是拿这个举例，道理应该是所有类型的都可以），要从Button上取得slot as canvas panel slot，就是说里面的物体拿slot的时候要按照外面的物体的类型来决定slot的类型。这个在蓝图里面已经走到这一步了。明天再继续了。
+https://forums.unrealengine.com/t/resizing-umg-widgets-in-blueprint/130283
+看UntamedLoli的留言。Untamed = 野性，666。
 
 
 
