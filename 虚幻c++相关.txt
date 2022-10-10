@@ -8,11 +8,6 @@ twitter：yagaodirac
 
 
 
-to do list:
-动态改UI控件的外观：
-
-
-
 General
 
 不是要吵架，很多人觉得自己可以随手写蓝图了，觉得自己已经是很有经验的虚幻程序员了，但是其实这个是技术策划的技能。如果你的电脑不能轻松跑虚幻加一个vs，比如今天（2022），如果你的电脑没有32g内存，那么几乎可以肯定你没有足够的虚幻c++的能力。或者换句话说，如果你的电脑没有32g内存，你可以先不读这个文档了，因为暂时没办法真的使用，可以考虑先研究编辑器内的功能，也不少了。
@@ -213,69 +208,6 @@ widgettree->construct什么什么吧好像，创建单个的ui控件。
 Delay的做法在网上有，总的来说，个人不推荐lambda expression，也可能是可行的。在类里面另外写一个函数，然后命名上面稍微注意一点。反正我的习惯是 OriginFunctionName_DelayCB_1，然后2，3。这样的好处是写法会比较连贯。vs会提醒，要用&在函数名字前面来得到函数的指针，我总觉得这个是c++的一个bug，反正能用就完事了。然后这个情景下，要用形参里面有this的版本。不用关心函数的那个具体类型，void进void出肯定是可以用的（所以写成类的成员函数比较方便。
 
 ai move to应该是一个蓝图的宏，然后c++里面，网上也说了，是simple 什么什么，然后可能要自己手动处理后续的部分。
-
-
-
-UMG, widget, uuserwidget, UI
-
-这个简直超级无敌虚幻作风，脑筋急转弯的极致。
-先上参考资料。连续的4个视频，从13到16。
-https://www.youtube.com/watch?v=2Vu1Wn1O3WI&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=13
-Mike Stevanovic提供的一个思路是，先制作一个编辑器里面的widget，然后新建一个c++上的继承自uuserwidget的类，然后在编辑器里面re parent，或者在class default还是什么面板里面找那个parent class，设置过去，一样的。先在编辑器里面增加控件，比如button，勾上Is Variable（待查，这个好像不用勾。），然后在header里面用UPROPERTY(BlueprintReadWrite, meta = (BindWidget))，编译，编辑器里面的variable面板上的对应的variable就会消失。这样至少不会崩溃。
-另外一个细节就是，如果要指定一个类，要用tsubclassof。如果直接用uuserwidget*，编译的时候，蓝图里面的默认设置可能会被重置为空。
-
-给控件绑定的事件必须是UFUNCTION，括号里面可以空。
-比如：
-button->OnClicked.AddDynamic(this, &[the class name here]::[the callback function here]);
-
-此外，
-createwidget函数的第一个参数接受5种，分别是UWidget（好像可以用this），UWidgetTree（UUserWidget好像自带一个这个变量），APlayerController，UGameInstance（getworld然后get game instance），UWorld（getworld可以得到，见过这样写的，应该是靠谱的）。而且好像不include应该也可以用吧。
-补充一个细节，如果用::CreateWidget来尝试创建UWidget，会得到：
-static_assert failed: 'CreateWidget can only be used to create UserWidget instances. If creating a UWidget, use WidgetTree::ConstructWidget.'	test	C:\Program Files\Epic Games\UE_5.0\Engine\Source\Runtime\UMG\Public\Blueprint\UserWidget.h	1473	
-
-c++里面的函数是native开头的，nativexxx这种。没有UFUNCTION标记。
-在UPROPERTY里面写meta = (BindWidget)是用于在编辑器里面已经有一个控件了，然后要在c++里面方便的得到，才用。如果是动态创建的，不用，否则编辑器里面会报错。
-
-确认一个UI是否有在显示，除了可见性，还有一个就是IsInViewport，多半是uuserwidget里面的一个方法。
-
-找到个视频，我暂时不深入了，暂时留着。
-https://www.youtube.com/watch?v=T7v3UnL6PNU
-里面提到有3个方式可以做UI
-第一个是AHUD类，但是好像没办法做很复杂的东西。
-第二个是Slate系统，
-第三个是UMG
-
-
-待确认：
-sizebox有一个选项，size to content，不知道是不是和text也会有相互作用。
-有一个全局的类，UWidgetLayoutLibrary，里面可能有一些有用的东西。
-
-
-
-动态创建UI控件，很特殊，单独拿出来
-
-UI的类，主要有2个，一个是UWidget，一个是UUserWidget。编辑器里面的作为整体的，是后面那个user widget。但是里面的单个的小的，比如button啊，text啊，这个是UWidget。他们的创建是不同的。
-::CreateWidget是用来创建user widget的。
-而WidgetTree::ConstructWidget是用来创建UWidget的。
-具体的例子，::CreateWidget就不说了，应该比较简单。
-主要是另外一个，
-先
-#include <blueprint/widgettree.h>
-然后
-UButton* btn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
-btn->AddToRoot();
-在NativeOnInitialized()里面。如果放到NativeConstruct里面会显示不出来。不清楚其中的区别。
-亲测，这个btn不用标记UPROPERTY。
-
-
-
-动态改UI控件的外观：
-
-查到一个，UWidget里面有一个东西叫slot。另外一个说法是，好像可以用动画功能来做。
-现在查到的比较靠谱的事情是：
-如果是一个CanvasPanel里面有一个Button（只是拿这个举例，道理应该是所有类型的都可以），要从Button上取得slot as canvas panel slot，就是说里面的物体拿slot的时候要按照外面的物体的类型来决定slot的类型。这个在蓝图里面已经走到这一步了。明天再继续了。
-https://forums.unrealengine.com/t/resizing-umg-widgets-in-blueprint/130283
-看UntamedLoli的留言。Untamed = 野性，666。
 
 
 

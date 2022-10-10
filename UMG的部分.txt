@@ -1,0 +1,124 @@
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+
+
+编辑器内和c++部分共同的部分：
+
+widget是无法删除的，无法destroy的。如果作为根，要用add to viewport，其他的是add child widget。去掉的时候，根是remove from parent，其他的可以remove from parent，可以remove child，调用的主object不同。
+
+如果一个子物件没有尺寸，又需要控制它的尺寸，可以利用的东西是，在旁边放一个spacer，或者在外面套一个sizer或者border。我遇到过的一个情况是，最简单的那个text是不会占据一个尺寸的，在旁边放一个spacer帮它撑住那个空间，防止多个text重叠。这个技巧在vertical box和horizontal box里面有一些奇怪的东西的时候可能会见奇效。
+
+anchor，也就是那朵菊花，逻辑是，菊花只标记百分比，之后子物件的具体的4个边是根据到菊花的绝对距离。
+比如一个一维的例子：
+anchor是10%到50%，子物件从anchor开始的偏移是12和-21。
+如果上一级widget是从100到500，那么anchor就是从100+（（500-100）*10%） == 140，到100+（（500-100）*50%） == 300。然后子物件的位置是从140+12开始，到300-21结束。如果设置不合理，有可能出现结束比开始的坐标还小，结果应该是无法显示。
+换句话说，如果一个子物件要完全根据上一级物件的缩放而缩放，那么应该偏移设置为0，那么anchor的具体位置也就是子物件的实际的4个角。在编辑器里面设置的时候，先把菊花的位置放好，然后把4个offset全部写成0。
+测试的时候的一个技巧，编辑器的主视口的右上，最后一个按钮是控制整个widget的尺寸的，进去第二个是custom，然后这个时候最大的那个框就可以调节了。
+
+
+
+编辑器里面单独的：
+
+hierarchy面板里面，对着任何一个点右键，有wrap with 和replace with。外面加东西是wrap with，去掉自己是replace with然后进去选child.
+
+细节面板最上面，is variable。
+
+如果一个子物件的最大尺寸不正确，外面包裹的是canvas，多半是canvas的offset不是0.
+
+
+
+c++单独的
+
+这个简直超级无敌虚幻作风，脑筋急转弯的极致。
+先上参考资料。连续的4个视频，从13到16。
+https://www.youtube.com/watch?v=2Vu1Wn1O3WI&list=PLY9cHlxw3OgjKmwaTEekW3sr_oHY-HwGv&index=13
+Mike Stevanovic提供的一个思路是，先制作一个编辑器里面的widget，然后新建一个c++上的继承自uuserwidget的类，然后在编辑器里面re parent，或者在class default还是什么面板里面找那个parent class，设置过去，一样的。先在编辑器里面增加控件，比如button，勾上Is Variable（待查，这个好像不用勾。），然后在header里面用UPROPERTY(BlueprintReadWrite, meta = (BindWidget))，编译，编辑器里面的variable面板上的对应的variable就会消失。这样至少不会崩溃。
+另外一个细节就是，如果要指定一个类，要用tsubclassof。如果直接用uuserwidget*，编译的时候，蓝图里面的默认设置可能会被重置为空。
+
+给控件绑定的事件必须是UFUNCTION，括号里面可以空。
+比如：
+button->OnClicked.AddDynamic(this, &[the class name here]::[the callback function here]);
+
+此外，
+createwidget函数的第一个参数接受5种，分别是UWidget（好像可以用this），UWidgetTree（UUserWidget好像自带一个这个变量），APlayerController，UGameInstance（getworld然后get game instance），UWorld（getworld可以得到，见过这样写的，应该是靠谱的）。而且好像不include应该也可以用吧。
+补充一个细节，如果用::CreateWidget来尝试创建UWidget，会得到：
+static_assert failed: 'CreateWidget can only be used to create UserWidget instances. If creating a UWidget, use WidgetTree::ConstructWidget.'	test	C:\Program Files\Epic Games\UE_5.0\Engine\Source\Runtime\UMG\Public\Blueprint\UserWidget.h	1473	
+
+c++里面的函数是native开头的，nativexxx这种。没有UFUNCTION标记。
+在UPROPERTY里面写meta = (BindWidget)是用于在编辑器里面已经有一个控件了，然后要在c++里面方便的得到，才用。如果是动态创建的，不用，否则编辑器里面会报错。
+
+确认一个UI是否有在显示，除了可见性，还有一个就是IsInViewport，多半是uuserwidget里面的一个方法。
+
+找到个视频，我暂时不深入了，暂时留着。
+https://www.youtube.com/watch?v=T7v3UnL6PNU
+里面提到有3个方式可以做UI
+第一个是AHUD类，但是好像没办法做很复杂的东西。
+第二个是Slate系统，
+第三个是UMG
+
+
+待确认：
+sizebox有一个选项，size to content，不知道是不是和text也会有相互作用。
+有一个全局的类，UWidgetLayoutLibrary，里面可能有一些有用的东西。
+
+
+
+c++内动态创建UI控件，很特殊，单独拿出来
+
+UI的类，主要有2个，一个是UWidget，一个是UUserWidget。编辑器里面的作为整体的，是后面那个user widget。但是里面的单个的小的，比如button啊，text啊，这个是UWidget。他们的创建是不同的。
+::CreateWidget是用来创建user widget的。
+而WidgetTree::ConstructWidget是用来创建UWidget的。
+具体的例子，::CreateWidget就不说了，应该比较简单。
+主要是另外一个，
+先
+#include <blueprint/widgettree.h>
+然后
+UButton* btn = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
+btn->AddToRoot();
+在NativeOnInitialized()里面。如果放到NativeConstruct里面会显示不出来。不清楚其中的区别。
+亲测，这个btn不用标记UPROPERTY。
+
+
+
+动态改UI控件的外观：
+
+这个在蓝图和c++的做法应该是类似的，同样可以利用蓝图里面快速验证然后转到c++的做法来得到辅助。
+
+先说一些背景资料吧。
+继承关系是，UObject有2个和这一块相关的子类，一个是UWidget，一个是UVisual。
+UWidget后面继承出来的2个需要知道的，一个是所有的单独的控件，是直接从UWidget上继承出来的（也就是对应WidgetTree->ConstructWidget的部分），另外一个就是UUserWidget，应该很熟悉了。
+UVisual这个比较少见到讨论，UVisual本身内容很少，UVisual的子类只有一个，就是UPanelSlot，内容也很少，基本可以认为只是为了类的层级关系而存在的。UPanelSlot的子类也不多，大概15个左右，比如：
+UButtonSlot, UCanvasPanelSlot, UVerticalBoxSlot。
+一个还值得做做看的事情是，vs里面的class view里面，找到UPanelSlot，看它的子类，并且不显示继承的方法，会发现里面除了UCanvasPanelSlot，其他内容都比较少。
+蓝图里面有8个set，c++里面一共是12个，但是只有8个get。
+其中，c++里面的auto size，在编辑器里面是size to content
+layout里面是offset anchors alignment3个，我没测试，我觉得是一个函数解决3个问题。
+offset里面是要一个叫margin的类型，我也没测试，我觉得应该就是我前面给的经验公式里面anchor后面那个数值。
+然后还有一个单独的position，emmm，感觉有点冗余，可能是提供了不同的公式吧。应该是可以互相替代的。反正我没测试。
+特殊的，用slot进来可以直接设置size，而UWidget那边的方法是无法直接得到这个的。（这就是我研究这一块唯一的目的。。虚幻真的太浪费学习周期了）
+然后c++里面有但是蓝图没有的，desired position，minimum，maximum，3个，我怎么感觉这3个应该是sizebox的东西？
+没提的就是和编辑器里面的一样的。
+反正这些就是，同样的事情，给了不同的接口，一方面是提供不同的公式，另外一方面我觉得是因为，每次set***函数下去，里面都会更新一些相关的数值，所以如果一个事情要调用更多次的set***函数，性能会稍微差一点。如果我发现不是这样，我再来更新。如果你们发现我写得不对，来我的github页面留言。
+
+现在再说怎么动态改外观应该就比较好理解了。
+蓝图里面，勾上is variable，然后蓝图里面，拿出来，get slot，cast成上一级物体的名字对应的slot类型（可以在这儿下个断点），然后slot拖出来，set，看看里面能有什么操作。可以拿c++代码辅助。
+c++里面（还没测试），一个控件，点slot，cast成上一级节点对应的类型，然后使劲整。
+
+这儿要注意的事情是，至少我看了一圈，slot处理的事情是margin，padding，一类的，不处理scale和rotation。如果是scale和rotation，我猜应该是直接在控件上找就有了，也就是UWidget那边的功能，相对来说应该是要简单很多的。暂不展开，需要的话留言。
+
+姑且就这样了，不研究UMG动画相关的部分了。
+
+出处，以及感谢这位网友。
+https://forums.unrealengine.com/t/resizing-umg-widgets-in-blueprint/130283
+看UntamedLoli的留言。（Untamed = 野性）666。
+
+
+
+
+
+
+

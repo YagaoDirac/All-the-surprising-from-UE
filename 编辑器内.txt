@@ -1,0 +1,247 @@
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+
+
+docs
+
+官方有一些，按主题的，很不错。
+mathew 的 wtf 系列
+docs.unrealengine.com
+learn.unrealengine.com
+官方youtube，包括live training系列。
+ue4community.wiki
+
+
+
+shipping，packaging，release，cooking
+
+如果安装文件被移动过，会遇到无法cook的问题。最简单的办法就是重新安装虚幻。
+此外，查到的一些细节：
+editor preferences里面：
+enable support for long paths(260什么），可以无脑勾上。
+project settings里面：
+最上面的project里面，好几个都和发布有关。其中，project，packaging，右边packaging里面，advanced，list of maps to inlucde in a pachaged build，这个里面选文件的时候是选.umap文件。
+
+project，platforms，里面，是其他的化妆。
+
+cooking的一些具体细节可以在
+https://docs.unrealengine.com/5.0/en-US/build-operations-cooking-packaging-deploying-and-running-projects-in-unreal-engine/
+找到。我暂时不研究这个了。
+
+
+
+碰撞检测，物理
+
+模拟物理有一个单独的check box。
+开模拟物理以后，碰撞组的那个地方必须要选择enable physics的其中一个，不然会出warning。
+query是sweep，overlap，各种trace by channel用的。必须也要在droplist里面选开启query。
+overlap 事件必须是双方都要generates 才有。
+hit struct里面的impact normal很可能是算法真的找到的第一个三角面，测试过，不是很稳定，不是最靠近或者最什么什么角度的。如果相邻三角面的角度不大，应该还ok。反正正常情况用normal就很好。除非normal在撞到边和角的时候会比较破碎。
+
+physical anim里面，mesh的碰撞要把模拟物理开开，不然不会有效果。
+手动追加物理干扰的方法有，appulse，add force，set linear/angular velocity。
+
+遇到碰撞或者overlap不工作的情况，依次检查所有的可能的地方。函数里面通常由忽略自己，忽略列表，到底是by channel还是by object type。所有相关物体的模拟物理开了没，函数里面也可以设置模拟物理。然后detail面板里面的collision里面的那个droplist里面有没有物理，下面的3列的check box里面设置对没有。
+比较容易忘记的还是函数调用的时候的各种设置。
+
+
+
+bsp
+
+5里面是在quick add to project（cube with a green +）里面的place actor panel。然后进去找。
+之后在details里面，有一个align brush vertices，点一下，不然编辑功能不全。
+lethe是要用2d的图形。做法是，最坐上的select mode，然后（省略），然后pen模式，勾上create brush shape，然后在轴对齐的某一个视图画，然后lethe工具，在另外一个轴对齐视图用。
+选中有相互作用的所有bsp，一起转static mesh，不然会抽。
+bsp增加三角面的时候，点选顶点的时候要顺时针，不然flip。
+
+
+
+controller/ AI controller
+
+单机可以不要在主角上用possess。
+AI controller的auto possess一定要写对。spawn的和placed的一定要写对，不然会没有。
+推荐在ai controller里面从on possess开始写，而不是begin play开始。
+controller是aactor的子类，可以getworld。但是controller不能getactorlocation。
+
+
+
+behavior tree
+
+写在行为树的笔记的最开头，service，task那些里面，如果无法正常的得到黑板的内容，用传进来的controller，cast，get blackboard，然后往外拿。这些函数也会得到pawn，所以其实这些变量不一定要保存的黑板上。黑板的目的可能只在于行为树内部的事件驱动，也就是虚幻内建在行为树里面的那些decorator和task，和类似的。如果不是给内建的那些东西用，variable放在黑板上和放在controller或者pawn上没有任何区别。
+
+行为树的3个可自定义的组件的核心内容：
+task里面是perform condition check AI, execution start AI, execution finish AI.
+decorator: 
+service: 
+
+c++里面写行为树的node，新建之后直接编译是通不过的，这个时候从报错里面，找到有一个函数未定义，复制出来，然后随便定义一下，再编译，就可以了。
+
+BTNode好像是无法保存自身的变量的，所有用同一个行为树的都共享这些节点，官方文档里面提到一个变量叫bCreateNodeInstance，我没查到，应该是c++里面的。总之官方提供了2个黑板之外的存变量的方法。
+https://docs.unrealengine.com/4.26/en-US/InteractiveExperiences/ArtificialIntelligence/BehaviorTrees/BehaviorTreeNodeReference/
+的最后。
+
+simple paralell。immediate模式下，task返回，就结束。delay模式下，task返回了，再等右边下一次结束的时候才结束。simple paralell的设计意图和平行没有任何关系，左边的task应该就是一个简单的门，右边的子树才是干活的部分。simple paralell的一个无法替代的能力是，task不返回的情况下，右边的子树可以执行任意次，而完全无视外面的更高优先级的部分。
+
+task节点里面abort好像是没有效果的，必须是finish才能结束。得到的callback只有execute和tick。不排除abort要配合simple paralell。
+
+
+
+虚幻的行为树和标准行为树的区别：
+
+刚刚看到的，还没测试的。task里面可以有set finish on message。也是可以做消息驱动的。
+
+
+1，虚幻的行为树没有标准的平行节点
+2，重复不是用decorator做，而是用simple paralell做，如上面一段的描述。
+
+一个子树的反复执行：
+1，decorator里面有好几个内建的，conditional loop, loop, time limit。
+2，利用simple parallel, 有一个单独的task，利用这个task来控制另外一边的子树的提前结束，simple parallel本身要设置为immediate。注意，不能反过来，右边的子树不能控制左边的task的提前结束。另外一个用法就是，task结束时间比右边的子树要晚，右边的子树会反复执行。这应该是唯一的反复执行一个子树而不执行优先级更高的（外面的左边）的部分的方法。
+
+一个子树的提前结束
+，在子树根节点放一个decorator（blackboard），利用这个decorator的abort。（还没测试）
+2，如同上面的2，利用simple parallel
+
+if逻辑的方法：
+1，官方推荐的是用decorator
+2，根节点用sequence，在里面，前面的task根据条件返回success或者failure，真的task放后面。但是根据官方的推荐，task只做真的任务，不做条件，所以这个做法要斟酌一下。不过在标准的行为树里面，这个做法是存在的。
+
+并行的方法：
+官方推荐的是用service。利用service，路径上的所有service都是一起执行的。可以把永远要执行的放在尽量靠近整个树的根的位置。
+另外一个我个人不推荐的做法，simple parallel只能把一个task和一个子树并行起来，如果嵌套一个simple parallel，也只有2个task和1个子树，而且会导致退出时机的问题，感觉应该是很不好用的。
+
+利用abort low priority的特性，加上多层selector或者多层sequence，可以限制abort的范围，从而不一定要在每个节点上加decorator来abort self。
+
+状态机转行为树：
+用一个变量标记一下现在是什么状态，然后用decorator来判断，如果是，就放进去，如果不是就跳过。这样就可以形成一个多层的状态机。好像有点笨。
+
+
+
+black board
+
+一个巨大的惊喜，没有数组。要用的话，自定义一个blueprint。
+官方在2015年的时候说过很快就会实现，反正今天2022年，写这个文档的时候，没有。
+c++的时候，有2个名字类似的基类，一个叫UBTTask_BlackboardBase，一个叫UBTTask_BlueprintBase。具体可以参考内建的UBTTask_MoveTo。核心是，如果需要blackboard key，应该是第一个。BlackboardBase好像是会自动生成几个核心调用函数，我觉得可以理解为不能在编辑器里面编辑逻辑的版本，而可以在蓝图里面编辑的应该是BlueprintBase。也就是对应编辑器里面的内建的，但是只能设置参数的，和，新建的，可以在里面写蓝图的。
+
+
+
+nav mesh, navmesh
+
+navmesh本身内容不多，官方文档不长。需要记住的事情主要是：
+1，好像没有办法在同一个level里面制作超过1个navmesh，所以可能要为了多重navmesh专门制作多个level。另外一个可能可以的思路是，在project setting里面，navmesh里面，好像可以找到给不同的agent的设置，但是总觉得就算能用也会很局限。
+2，navmesh可以让pawn跳，文档里面有讲。
+3，可以设置动态的navmesh，不过好像没什么用。动态下不知道能不能设置代价，没测试。
+4，ai在navmesh里面移动，在蓝图里面的节点是AI Move To，不是常规的函数节点，更像是一个宏，右上角有时钟图标。
+5, https://forums.unrealengine.com/t/how-do-i-get-the-navigation-path-to-a-point/294257/4
+c++里面要在Build.cs文件里面加一句PublicDependencyModuleNames.AddRange(new string[] { 其他不变，加上 "NavigationSystem" , "AIModule"});。具体参考topdown模板。
+
+
+
+reinforcement learning
+
+暂时没时间确认这一块了。
+有一个插件叫mindmaker，中间没有空格。这个是专门的rl的。没测试过，不过可能需要足够的rl的基本功才有办法用。
+虚幻本身还有一个nni，neural network interface。但是这个应该没有专门的rl的框架。
+5里面好像还有一个官方提供的unreal engine support for machine learning.
+
+
+
+math expression
+
+如果用到某个变量，名字没有空格，会在里面直接取得，不用连线。鼠标指到这个math expression节点，可以双击进去，官方文档说的是类似一个子蓝图。
+其他就是，vec（1，2，3）这个语法是存在的，包括rotator，transform，以及他们的别名，缩写。
+缩写是ok的。
+反正很不规范的一个特性。文档不长。https://docs.unrealengine.com/4.26/en-US/ProgrammingAndScripting/Blueprints/UserGuide/MathNode/
+
+
+
+event
+
+蓝图里面的时候details里面有一个好像是consume event。这个会导致独占，但是可能不稳定。
+
+event还有一个顺序问题。我不记得官方的图在哪儿了，反正就是，
+1，有设置enable input的所有的actor
+2，controller。controller还可以设置一个好像是叫prerequisite tick actor，我没测试，反正名字大概也很好理解。
+3，ui还是gamemode，忘了。
+4，pawn
+这个顺序可以帮助解决输入事件拦截的一些很诡异的问题。
+
+
+
+reset level
+
+会调用on reset level。
+编辑器里面根据浏览的视觉位置自动创建的character会被删，也就是说这个功能和编辑器里面的调试功能会有一些冲突，不过也无所谓，正式的版本多半不依赖这个。
+
+
+
+Gameplay Tag system
+
+这是一个plugin。
+这个和actor的detail里面自带的那个tag是不同的。只能选择在引擎里面注册过的tag，而ue自带的tag是任意的字符串。
+在actor里面新建变量，设置为gameplay tag或者gameplay tag container。
+tag的检查方法基本是以match开头的，cont的检测方法基本是以has开头的。
+有一个expression系统，但是官方给的例子是检测出来以后，结果是bool，再手动处理。效果来说应该是一样的。可以不理那个expression的做法。
+所有的比较都有一个source和input的区别，source如果是a.b，那么implicitly自带一个a（除非是exact版本），而input没有这个说法。source永远在前面。input永远在后面，而好像只可能是一个cont。cont可以和array无缝衔接，所以感觉整个系统就是一个糖。
+proj setting里面，有一个restricted config file，反正就是一个团队协作相关的权限控制的东西。里面的config name好像只能是*.ini，就是说必须是一个文件名。而这个文件还不能是config文件夹下的那个ini，还必须是config/tag里面的ini。
+没有找到category remapping的任何资料，测试了一下也没有任何结果。
+Gameplay tag redirects是一个很危险的东西，一定要小心。它的效果是把编辑器里面的所有的tag进行转换，比如设置a转换成b，那么运行的时候，所有的a就变成了b，好像没有办法取消。我猜这个东西的用法应该是在一个模块测试的时候，用这个转，然后用完马上回来把这个里面的东西清空。如果设置a变b，b变c，a会直接变成c。反正出问题就gg了，能不用尽量不要用。
+4里面好像不能在proj setting里面做任何的修改，5好像才可以。所以前面说的那个没有测试出来的东西，可能以后用5的时候才会知道是什么。
+
+
+
+Camera Modifier
+
+新建蓝图以后，找到functions，在overload里面，只有2个。其中有一个，输出需要一个结构体，make以后这个结构体的情况比较特殊，要在details里面勾选，相关的选项才会出现。
+用的方法是，player controller，里面的，player camera manager, 然后设置。
+预览里面如果看不到东西，可能是2d，然后方向不对，那个大sprite是单面的。
+
+
+
+Preview Scene Setting面板
+
+主菜单里面，Window，Preview Scene Setting。
+先说最重要的。如果preview在闪，找到PostProcessing, Lens, Exposure, 把里面的Min Brightness和Max Brightness打开，两个都写成1。
+其他的，PostProcessing, Lens, Exposure, Exposure Compensation可以考虑写成1.
+立方图在Environment里面。
+Lighting里面有一个Rotate开头的，可以旋转整个preview。
+
+
+
+Niagara, Particle
+
+youtube 有一个频道，CGHOW，稍微有点印度口音，不过应该有字幕。
+默认的时候，niagara fluids是不开的。一定记得开。
+niagara专用的node based编程应该不是蓝图。我感觉那个应该是类似计算图的，结果node应该是不能复制的，这个和材质是一样的，然后前面的都是关于数值的，白色的线不表示执行，应该是表示传递数据。反正我觉得这个事情很神奇，应该在ui上做出区别。
+如果preview在闪，参考 Preview Scene Setting 的部分。
+Niagara的接口是要分命名空间的，我看到的例子是User.parameter_name一类的，就是开头的User.，U是大写的，后面有一个点。然后在蓝图里面，niagara component上，set float parameter这样。这个写法好像和材质的差不多，只不过多一个命名空间。
+
+一个我没测试的。好像是说，在比较早的版本里面，蓝图要怎么和niagara交换数据。现在好像不用这么麻烦了。
+https://papersloth.hatenablog.com/entry/2020/08/01/112604
+
+niagara编辑器本体，里面，emitter，然后particle，名字后面有2个，一个是spawn，一个是update。particle spawn很好理解，每个生成的时候运行这个。剩下的，emitter spawn不是很明白什么意思。然后两个update，有一些是直接设置，还有一些是往上加，比如（没测试）在particle update里面写，hue shift linear color，这个里面的值应该是累加的那种。（需要测试）
+
+有一个是set parameter，设置了以后可以在别的地方绑定。
+range是一个vec2，分别对应min和max。
+
+scratch pad传东西给材质是通过set节点的，dynamic material parameter。材质里面对应就是dynamic parameter。似乎还有一个步骤，就是，在niagara的render里面，有一个bindings，设置这个，把变量从niagara给到材质。
+材质里面还一个常用的，从niagara拿东西的，就是particle ***这样，比如particle color。
+
+好像所有东西都可以用scratch 什么什么，都可以进去写。
+
+
+
+
+
+
+
+
+
+
+
+
+
