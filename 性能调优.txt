@@ -1,0 +1,73 @@
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+或者类似名字
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+长期更新，欢迎到github下载最新版本。
+转载注明出处。
+
+
+
+这一篇基本是对官方文档的一个概括，最后加上一些个人的经验，操作层面的东西不多。
+我本人没有做过这一块，但是技术面试的时候被问过不止一次，所以感觉这一块应该还是有必要稍微过一下。
+原文
+https://docs.unrealengine.com/5.0/en-US/guidelines-for-optimizing-rendering-for-real-time-in-unreal-engine/
+
+Console Commands for Displaying Performance Stats
+发项目的时候设置Development build，在目标机器上运行，可以有控制台。然后给出了一些控制台的指令。总之就是可以显示一下每个事情花的时间。
+
+Best Practices for High-Resolution Normal Maps
+法线贴图的分辨率比较大的时候
+    Bake the normal map in Xnormal as an 8k TIFF with 4xAA.
+    Import the TIFF into photoshop, then downres it to a 1k texture.
+    Apply a Guassian Blur with a value of .35px.
+    Convert the image from 16-bit to 8-bit.
+    Export the image to a 24-bit TGA.
+    Import the final normal map into Unreal. 
+包括后面的两个选项。
+这一块总觉得应该是美术来做。
+
+Reducing Mesh Count
+说的是mesh count，没说tris count，也就是说，合并actor是一个可行的事情。合并actor可以有2个做法，一个是编辑器内，选多个actor，右键，combine actor，另外一个是网上有很多教程，利用houdini来做。
+
+Reducing Material ID Count
+可以简单的理解为合并材质，我看到的教程是利用substance的某一个版本来处理，虚幻的文档里面提到可以利用顶点颜色来做一个划分，不同的顶点颜色对应到不同的具体材质，从而实现合并材质，而且不会糊。
+文档里面给了一个材质的截图，很夸张，估计是用substance直接生成的。
+
+少用透明，这个是常识吧？如果不懂的话去看看延迟渲染和前向渲染的具体细节。前向渲染里面，透明材质的代价和不透明是一样的，但是延迟里面不一样，透明还是那么贵，但是不透明就相对便宜很多。常识吧？而且透明对性能的影响是直接看在屏幕上的面积的，也就是说一个小物体，只要特写，也能给你搞出low帧。而且多层的透明是分开算性能的，也就是说，如果要做半透明物体，尽量考虑把背面扔了。（这一段是我自己的发挥，不是官方文档，只是给真的不懂的朋友一个快速的直觉）
+
+Optimizing Texture Resolution，贴图分辨率，感觉就是多测试吧。
+里面提到一个mipmap的尺寸的测试方法，我老实说我不知道那个debug mipmap是怎么做的，不过应该很容易找到教程。
+
+Package Size and Boot Time
+这一块我觉得重要的就只有，项目是可以压缩的，然后就是，不是所有东西都要在最开始就加载。
+
+Analyzing Package Size on Disk
+之前看到一个说法，就是这一块最要小心的就是贴图会不会导入了不止一次。就是说，一个贴图在不同的地方用，有可能就导入了多次。利用尺寸来排序吧，应该能检查出来。反正就是越大的资源越要认证检查。
+文档里面提了很多方法。都可以试试。
+
+最后提了一个其实很重要的东西，Unreal Insights。做这一块的朋友可以看看这个，我没看，但是听说这个是标准做法。
+
+
+
+缩写文档的部分结束。我说一点我自己的经验，可能不对，确实不太懂。
+半透明就不说了，前面说过了。
+虚幻里面有很好用的instance mesh，重复物体尽量考虑这个。这个据说还有一个变体就是树叶系统，forlige。
+其实还有一个这个文档没说的，就是level streaming，动态加载，无论是下一关，还是open world的地图分块以后的动态加载，我觉得也是很重要的。包括利用雾来挡住一些地方，包括给level手动做lod，都应该是要认证考虑的。
+如果是open world，还有一个世界尺寸的问题，我之前大致估算过，利用巫师3里面最大的那个地图，和我真是的在现实世界里面跑步的经验，那个地图的实际尺寸大概就是1km * 600m左右，没有多大。而且真的很多地方是有雾的，比如海边，有雾就看不到世界的外面，沼泽，因为是平坦的地形，如果可以看到很远的话，会很难处理。多加一些山，无论人能不能走上去，至少可以遮挡视线。尽量把人的活动空间控制在凹进去的地方，无论是利用collider（noob），还是利用收益（professional），还是利用什么我暂时想不到的（god）。
+树也可以一定程度的遮蔽视线，不然都是雾的话，会显得游戏没做完。树在理论上也应该用instance mesh。
+skeleton mesh, 曲面细分一定要克制。同屏人物，怪物，的数量，常识了吧，一般项目开头就会有一个基准，就测试清楚了。
+
+其他还有一些确实会伤害性能，但是好像通常不会很那啥的。
+蓝图里面的find all actors of class据说很慢，类似unity里面那个什么。反正缓存下来呗。程序员可能不会出这个问题，主要是要和其他岗位的人说一下。不过通常不是这个的问题。
+NavMesh的尺寸，分辨率那些，我记得在Nav Mesh的文档里面说过，据说很贵。
+Niagara，以及所有的粒子系统，暂时不清楚，但是直觉是这一块也会有可能造成影响，尤其是需要反复的在cpu和gpu之间传数据，以及在蓝图里面遍历一些东西，都可能会有影响。
+其他就是算法的复杂度那一块了，纯编程问题了，不在这儿展开。
+
+5里面只有静态模型不用刷lod，动态的还是要，我记得是这样。
+
+
+
+没了，我想到了再来补充。
