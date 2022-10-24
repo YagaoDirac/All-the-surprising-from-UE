@@ -1,0 +1,171 @@
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+或者类似名字
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+长期更新，欢迎到github下载最新版本。
+转载注明出处。
+
+
+
+读官方文档的读书笔记系列：虚幻容器
+
+写在开头：因为我本人的c++很扎实，我会习惯性的拿虚幻的实现去和c++标准库的实现对比。其实虚幻是很c语言的一个项目，大家千万不要无脑的拿c++的经验去套，多半是不对的。
+额外提一下，c++标准库，有时候也叫标准模板库（stl），只是利用了泛型的语法特性，不是围绕泛型的。stl实际上是c++语言规范的一部分，只是不以语法特性的形式提供，这是c++的哲学，这个哲学现在可能只有c和c++在用，因为语言不能有黑魔法才可能这样把标准库和语法特性分离。如果我说c++的实现，是包含了stl的。
+
+
+
+特别说明：我发现我对高性能hash表的原理的理解好像不是很正确，这篇文档里面的牵扯hash原理的部分请自行判断，我研究清楚了会来更新。反正里面保存链表的做法肯定是不行的。这儿牵扯到一个细节叫cache line，是cpu的实现细节上的，具体细节请参考计算机内存模型，CMU 15-213的部分内容。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/containers-in-unreal-engine/
+官方只给了3个容器，3个，那我请问虚幻不是写在c语言上的是什么？？？
+一定要注意一个事情，如果不牵扯反射，尽量不要用虚幻的容器。理由主要是：
+1，虚幻的容器的接口那些和c++的基本可以说完全不同，相对的资料，讨论会少很多，很可能就用错了，然后出问题。
+2，虚幻的容器都不支持任何的部分操作，很不灵活，实际上会浪费性能。
+3，虚幻的容器只有vector，（binary priory queue，stack), hash，没了。
+4，虚幻没有二分查找。
+一个细节，虚幻的hash比c++stl的好像要快，但是谷歌的应该是最快的。
+
+一些所有容器都牵扯的细节：
+add，emplace加元素，
+append复制一个到另外一个，
+movetemp移动一个到另外一个，然后原来的清空。
+for (auto& Elem : 某个虚幻容器)
+CreateIterator, CreateConstIterator, 迭代器变bool来确定有效性。
+
+Num和相关的几个，表示元素数量。
+Contains检查是否有某个元素。
+find函数。
+[]
+
+remove，直接移除东西。
+sort，居然连hash都有这个接口，总觉得哪里不对。
+
+empty函数是缩内存的，可以给一个参数，reset也是缩内存的，不知道这两个是怎么干活的。c++的empty是检查是否为空，是性能目的的一个特殊接口，虚幻容器没有对应的。
+MoveTemp都有，把一个的移动到另外一个里面。不是一个性能很好的东西，肯定是复制过去的。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/array-containers-in-unreal-engine/
+It is not designed to be extended, and creating or destroying TArray instances with new and delete is not a recommended practice. 
+不建议扩展很好理解，里面的那些反射什么的，可能无法在更多层的结构上正常干活，应该是用宏实现的。反正通常也不影响。比较意外的是，不建议new和delete，如此一来，只能是用一个东西去装一下，比如UObject一类的。而且不能在类里面写这个的指针，然后动态申请内存。
+当然这个是虚幻的读书笔记，我想说的是，如果你们自己要做一个什么东西，千万不要用反射，信我。
+TArray有一个函数叫Emplace，c++里面也是这个名字，自行研究。卡性能的话，这个是需要用的。
+Emplace will use the arguments you give it to construct a new instance of the element type. 
+官方还是讲解了一下，很贴心。
+Emplace will never be less efficient than Add
+那永远emplace就行了，除非对应的构造函数被挡了。
+接口不直观的地方还有就是，元素个数相关的函数是Num，不是size。
+得到迭代器的函数是CreateIterator and CreateConstIterator，而不是什么begin，end，而且这个只能得到begin，检查有效性的方式是转化为bool，于是官方的例子是for (auto It = StrArr.CreateConstIterator(); It; ++It)，注意中间那个条件的部分。
+Sort不是stable排序，相等的元素的顺序是不保证的。也很符合c++的习惯。stable的叫StableSort。
+HeapSort相对比较少见，很多人不知道这个是什么意思。c++里面好像是makeheap。严格的说这不是vector这种数据结构的东西，应该是priory queue的，只是内存里面的结构是一样的，所以通常也只是以vector上多出来的算法的形式存在。
+GetTypeSize，c++里面没有这个吧？得到元素的尺寸。
+IsValidIndex好像也是c++里面没有的。
+last和top几乎是同一个东西。top应该是stack的情景。last(0)是最后一个，而不是py，js传统里面的-1。
+ContainsByPredicate，应该是c++的contain_if
+FindLast我没懂，你们测试一下？
+没找到的情况，根据函数签名不同，有一个是返回INDEX_NONE，而不是c++的end迭代器的那种手感。
+FindByKey返回指针，IndexOfByKey返回index。
+名字里面有predicate的就是可以接受一个函数的，应该是任何可以()的都可以。
+remove系列很直接，直接就remove掉了，不用像c++那样还有一个什么函数。然后swap系列的会破坏有序性，但是会带来性能的提升。
+MoveTemp还多方便的。c++里面可能要复制过去，然后把原来的清空，就是代码会多一点，内部原理应该是一样的。
+
+Heap
+不清楚heap的自己去查资料。不过通常用不到。
+
+Slack
+没错，不是stack。
+c++里面应该是resize一个更大的数字，虚幻里面是Empty(新的尺寸)，我不知道这个命名是什么意思，很扯。
+另外一个叫Reset。我没看太明白，一个是强制增加内存吗，然后另外一个不是强制的，而是需要才增加？
+Shrink倒是很方便。c++里面要新建一个vector，复制，然后swap。不过两个的性能应该是一样的，不然怎么缩内存呢？
+
+Raw Memory
+就说一个细节，原地new，c++的一个不太出名的特性，语法应该是new(ptr) Class(param...);。英语是inplace new。
+
+Miscellaneous
+没明白，不过应该不重要。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/map-containers-in-unreal-engine/
+TMap
+key是const，改动的话是先拿掉，改，然后加回去。和c++一样。但是语法层面来说，只有第一层级才会受这个const的影响，更深的层级的内容是可以随便决定的。无论如何不要让key的相等性（c++里面是小于）依赖这些可以改动的部分。
+
+第一个事情，有TMultiMap，有TPair，虚幻就是坚决不用c++标准库。
+第二个事情，TMap is a hashing container，不是二叉树。所以是不能做大小比较的，只有相同。
+第三个事情，GetTypeHash函数可以了解一下。
+TMap can also take an optional allocator to control the memory allocation behavior. However, unlike TArray, these are set allocators rather than the standard UE4 allocators like FHeapAllocator and TInlineAllocator. Set allocators, (class TSetAllocator), define how many hash buckets the map should use and which standard UE4 allocators should be used for hash and element storage. 
+想研究allocator的可以看看这一段。
+However, even though TMap doesn't shuffle elements to fill gaps, pointers to map elements may still be invalidated, as the entire storage can be reallocated when it is full and new elements are added. 
+1，容器随时可以把内存挪一下，所以拿到引用赶紧用，一旦操作了容器，所有的引用都要认为是失效了。这个和stl里面的那些讲究很类似。
+2，这个做法的效率其实还多高的。有兴趣可以看看youtube频道cppcon上面，谷歌的2次讲他们新发开的哈希表的做法。
+一点题外话。其实就算是最早的c++stl的哈希表那种需要跳转一下的做法，增删元素应该依然会引起同一个hash值的索引全部失效，而通常是无法利用这个特性来利用其他不失效的索引的，所以其实这个做法没什么道理，而且效率真的差得比较多。
+
+改索引内容也是add函数，第一次加一个索引也是add，感觉这个东西更像是一个update的手感。
+The Add function can accept a key without a value. When this overloaded Add is called, the value will be default-constructed
+FruitMap.Add(4);//{ Key: 4, Value: ""          }
+这个还多特别的。
+
+You can also merge two maps with the Append function, which will move all elements from one map into the other
+TArray里面的函数叫movetemp。这真的很虚幻。
+
+Queries
+
+operator[]得到的东西Doing this with a non-const map will return a non-const reference, while a const map will return a const reference. 这个事情很神奇，const map应该也返回non const的ref的。和c++的不一样。我不知道这个const map还有什么用。
+
+If you are unsure whether or not your map contains a key, you could check with the Contains function, and then use operator[]. However, this is suboptimal, since a successful retrieval involves two lookups on the same key. The Find function combines these behaviors with a single lookup. Find returns a pointer to the value of the element if the map contains the key, or a null pointer if it does not.
+经典话题了，如果一个键不存在怎么办。
+我简单看了一下这一段的接口，要用的时候再来看吧。唯一需要注意的事情可能是，FindRef, despite its name, will return a copy of the value associated with your key, or a default-constructed value if your key is not found in the map. FindRef does not create a new element, and thus is available for use with both const and non-const maps.就是说，findref一定会返回一个物体，但是不一定表示有这个键，所以如果一个类，默认值也是有可能在正常使用中出现的值，那么这个函数是无法给出任何线索的。反正我觉得这个接口还多容易出问题的。
+还有一个函数叫FindOrAdd
+c++里面也有类似的说法，就是查找一个东西，如果不存在怎么办，可以参考。
+
+Lookups by value are slower (linear time) than lookups by key. This is because the map is sorted by key, not by value. In addition, if a map has multiple keys with the same value, FindKey may return any of them.
+1，这个很慢，如果要反复用，做一个TMap<value type, key type>。
+2，只返回一个，顺序还不一定，呵呵。
+
+Sorting
+我没看懂，hash不可能排序。因为查找的性能就会编程O（ln（n）），没有任何道理。
+也没有看到什么很特别的说法，那我只能说，不要用这个功能。如果一定要排序，复制到一个TArray，或者c++的什么容器里面去做。
+
+Slack
+提前获取内存有3个函数Reserve，Reset，Empty。
+缩内存就很奇怪了。按道理说hash缩内存应该是把所有的条目复制到一个比较小的内存里面，但是肯定依然是有空的，而且空不会少，因为hash的目的是搜索的时间复杂度必须是O（1），而且系数必须尽量小，浪费内存是无所谓的。最多就是跳转以后的部分，确定不会改动了，可以用对应的数据结构的缩内存的方法来处理。但是直接拿hash值当偏移量的那一步的那个数组是不可能缩的。
+很神奇，不清楚虚幻是怎么处理的，如果要牺牲时间复杂度，那不如老老实实放到某种vector里面去做，比如TArray。
+缩内存的3个函数Collapse，Shrink，Compact。Shrink去掉末尾的空元素，帮助应该会很小，而这个函数本身的性能不会好。Compact可以把元素中间的空隙移动到末尾（可以配合Shrink），然后你的hash的效率就完蛋了，得到的结果就是一个普通的vector了。Collapse不知道干嘛的。
+如果只是移除末尾的空隙，hash的搜索性能是会被保留的，也就是说，如果一个TMap不需要改动了，可以做一下这个操作，虽然也省不出来几个内存。
+
+KeyFuncs
+大概是说用类型作为key，我没读，多半用不到。
+
+Miscellaneous
+这一段都是性能调试啊，debug啊，可以跳过。
+关于hash的内存占用，可能还是测试为准吧，不想测试可以无脑的多给个20%（随口一说）以上的冗余，保护搜索性能。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/set-containers-in-unreal-engine/
+TSet
+几个事情
+元素是const，相当于只有key的map，改动的话是先拿掉，改，然后加回去。和c++一样。但是语法层面来说，只有第一层级才会受这个const的影响，更深的层级的内容是可以随便决定的。无论如何不要让元素的相等性（c++里面是小于）依赖这些可以改动的部分。如果要反复的改一部分，更直观的方式是map。
+
+重复元素是通过一个什么参数来决定的，也就是说相当于也是有TMultiMap的。
+
+TSet 。。。。。。 where order is irrelevant.
+TSet uses hashes。。。。。。
+文中还提到Allocator，具体的ctrl f吧。
+
+依然要小心引用的失效问题，和上面map的部分一样。
+
+find函数的部分和map不一样，少了不少。
+
+Sorting
+参考上面map的部分。
+
+后面都差不多，多了一个CompactStable。
+
+
+

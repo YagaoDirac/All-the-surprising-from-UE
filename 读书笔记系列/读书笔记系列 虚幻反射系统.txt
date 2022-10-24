@@ -1,0 +1,183 @@
+https://github.com/YagaoDirac/All-the-surprising-from-UE
+或者类似名字
+
+作者：yagaodirac
+github：yagaodirac
+twitter：yagaodirac
+
+长期更新，欢迎到github下载最新版本。
+转载注明出处。
+
+
+
+读官方文档的读书笔记系列：虚幻反射系统
+
+
+
+这个文档是
+https://docs.unrealengine.com/5.0/en-US/reflection-system-in-unreal-engine/
+
+
+
+写在开头，虚幻的所谓的反射，主要说指他们的rtti（run time type info)，但是还是有一些特奇怪的行为，比如相关的指针会被变成某种智能指针。反射不是c++内建的特性，所以可能很多相关的用词会很不规范。
+
+
+
+更正：
+UProperty pointers and pointers stored in Unreal Engine container classes such as TArray
+这种情况和c++的智能指针不同。他们既会增加引用技术，又会在资源销毁的时候被设置为无效。就是说，虚幻的内存管理是可以强制删东西的，强引用也会被设置为无效。c++的版本是，强引用只增加引用计数，弱引用只也被自动设置为无效，两个是没有重叠的。
+但是这个行为在5.1里面好像改了。这一块所牵扯的文档里面好像只有一个针对5.1有更新，那就以新的稳准吧。
+笔记里面有一些部分会说UProperty pointers是强引用或者弱引用，在5.1之前，这2个猜测都不对，5.1开始，应该是很类似强引用的情况。
+
+开始：
+
+https://docs.unrealengine.com/5.0/en-US/objects-in-unreal-engine/
+几个值得说的。
+UCLASS宏好像是可以固定的增加一些东西，就是getclass()，以及相关的，我觉得应该算rtti。包括CDO。如果不写的话可能就是一个标准的c++类。
+
+UObject Creation
+给了2个，一个是NewObject<class>，一个是CreateDefaultSubobject<class>。官方的说法是，构造函数必须要提供默认构造，而且实际的初始化应该写到beginplay里面，对应的逻辑析构应该是OnDestroy。也就是说这个构造函数可以理解为纯粹和内存管理有关的。
+
+UObjects should never use the new operator. All UObjects are memory managed by Unreal Engine and garbage collected.
+之前有说法是，UPROPERTY会让一个变量加入到gc，很明显是不对的，国内国外都有这个谣言。gc不会给一个变量做，知道gc原理就会明白，这个效率很烂。gc一定要给足够大的物体。当然，不要new 这个UObject 。其他的纯c++的应该还是该new就new。
+这个地方还有一个我没测试的，就是如果一个c++类里面含了一个UObject，这个可能会出问题。但是反过来可能是可以的。
+
+Functionality Provided by UObjects
+里面说了很多。
+    Garbage collection
+    Reference updating 
+这个基本可以认为是脚本语言的内存管理，但是具体算法可能不一定是双向链表还是树。我个人是比较喜欢树式的，强弱ref那种做法，不展开了。
+    Reflection
+这个不清楚，文档提了半天也不说具体是什么，很虚幻作风。
+    Serialization
+脚本语言都有吧，tostring什么的。
+    Automatic updating of default property changes
+    Automatic property initialization
+大概是prototype pattern相关吧，cdo相关。
+    Automatic editor integration
+UPROPERTY(DisplayName = "super wierd name that you never remember and it confuses you when you code in c++")
+    Type information available at runtime
+getclass, staticclass一类的吧。rtti。
+    Network replication 
+replicate这个关键字相关的
+
+UStructs are considered value types and are not garbage collected.
+
+然后还是格式，官方给的，
+#pragma once
+
+#include 'Object.h'
+#include 'MyObject.generated.h'//这个肯定必须是最后一个。
+
+UCLASS()//可能还是要写这个吧，如果是从UObject继承。
+class MYPROJECT_API UMyObject : public UObject//注意一下MYPROJECT_API
+{
+    GENERATED_BODY()//这一句好像还有一种写法，官方也没解释过差异。
+
+};
+
+This line is expected to be the the last #include directive in the file. If this header file needs to know about other classes, they can be forward declared anywhere in the file, or included above 
+很清晰嘛，前向声明或者包含，我个人推荐无脑前向声明，因为如果循环包含了真的很烦。
+
+The UCLASS macro makes UMyObject visible to Unreal Engine. The macro supports a variety of Class Specifiers that determine which features are turned on or off for the class. 
+这一段里面有一个链接。类似其他几个宏，要在编辑器里面看到，也要加这个宏。其实没什么值得说的，只是平时很少见到这一块的讨论，就专门提一下。其中一个比较有用的可能是相关的一些设定要保存到哪个文件里面，可以在这个里面设定。
+
+Specifying MYPROJECT_API is necessary if MyProject wishes to expose the UMyObject class to other modules. This is most useful for modules or plugins that will be included by game projects and which deliberately expose classes to provide portable, self-contained functionality across multiple projects. 
+就是说，如果只是要暴露给编辑器，这个MYPROJECT_API好像可以不写。
+
+The GENERATED_BODY macro takes no arguments, but sets up the class to support the infrastructure required by the engine. It is required for all UCLASS and USTRUCT. 
+所有UCLASS and USTRUCT都必须有。
+
+Destroying Objects
+里面的一个重点是，回收的条件大概在暗示，虚幻的智能指针是他们自己写的，UPROPERTY pointers好像是用的这个，TStrongObjectPtr这个类，我真的很少见到，但是从智能指针的原理来说，着2个应该同一个东西。
+
+the function MarkPendingKill() can be called directly on an Object. This function sets all pointers to the Object to NULL and removes the Object from global searches. 
+就是说为什么不用c++的智能指针，因为两个的接口还是不一样吧。
+
+Smart pointers are not intended to be used with UObjects.
+因为c++的智能指针会尝试delete这个物体。虚幻里面不手动new，不手动delete任何UObject。
+
+最后还有一段，Release 5.1 Changes
+官方并没有反对使用普通指针去指向UObject，不过我觉得这个很冒险。不过，garbage collection only runs between frames，所以如果只是在一帧之内，是安全的。至少5.1可以这么干。
+用IsValid()而不是直接if(某个指针)。因为可能已经标记了要删了，虽然还能找到。
+
+In the case of Actors, even if the Actor had Destroy() called on them, and they were removed from the level, then it will not be Garbage Collected until all references to it are released. 
+这句很重要。就是说，以前是要删就删了，然后所有相关的智能指针就都完蛋了，于是就要不停的if。现在看来，虚幻用的智能指针的行为应该是和c++的一样了。大概晚了c++可能9年吧，很好，很虚幻。为什么是9年，c++11标准里面的3个智能指针就是今天你们看到的3个，unique ptr, shared ptr, weak ptr，当时就已经是这个行为了。这个标准是2011年正式公布的，实际能用到可能是2013年。但是很扯淡的事情是，就是不用c++的智能指针，不知道为什么。
+The Main difference for licensees is that using the function MarkPendingKill() to force expensive objects to garbage collect will no longer work. 
+也是说的这个事情，以前是直接当场就删了，内存就释放了。现在必须等引用计数清零，或者逻辑清零。
+
+总的来说就是以前的虚幻的智能指针的行为类似只有weak ptr的情况，删的时候所有引用全部无效。这样是可以防止循环引用，导致无法释放。现在的情况是，引用的时候要想清楚会不会形成环。一个简单的办法就是还是遵循树式的gc的写法，或者就纯弱，都可以。如果你们需要我展开这一段，star这个项目，然后去issue留言。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/weak-pointers-in-unreal-engine/
+Pin function
+应该就是标准库里面的lock，weak_ptr::lock()
+至于和nullptr比较，我感觉这个可能是虚幻自定义的行为。官方的说法是，和nullptr比较，或者IsValid都可以做这个事情。
+
+Declaration, Initialization, and Assignment
+TSharedRef<FMyObjectType> ObjectOwner = MakeShared<FMyObjectType>();
+TWeakPtr<FMyObjectType> ObjectObserver(ObjectOwner);
+这个结构和c++的智能指针是一样的。只是虚幻就是不用c++标准库的东西。
+TSharedPtr<FMyObjectType> LockedObserver = ObjectObserver.Pin()这不是和c++的一样吗？？？
+特别的就是Shared Pointers (including the one returned by the Pin function) can evaluate as type bool in conditionals, where true indicates a valid object。我不记得c++里面有没有重载这个了，反正不重要。那就是说强引用是可以直接if的，但是弱引用要看看代码才知道，虽然很多人是这么用的。
+
+Dereferencing and Accessing
+To access a Weak Pointer's object, first promote it to a Shared Pointer with the Pin function. You can then access it through the Get function on either the Shared Pointer or the Weak Pointer. This method ensures that the object remains valid while you are working with it. 
+官方说的是，只要pin（c++的lock）了，得到了有效的强引用了，你可以从两个引用的任何一个去获取里面的物体。我的建议是请使用锁出来的强引用去进行后续操作，绝对不要用弱引用来干这个事情。c++里面的weak_ptr是根本无法索引到里面的物体的。
+
+Breaking Reference Cycles
+图论，有一个东西叫DAG，有向无环图。一个经典的没有任何问题的dag就是树，我说的c++自带的潜在的gc方案就是这个。
+
+Usage Warnings
+第一条是说，set和map里面的键不能用weak ptr，道理也很简单，因为这两个地方是const，weak ptr随时可能被修改。不过这个事情能不能过编译啊？weak ptr根本没有const版本吧？官方这个文档还是有点意思啊？
+第二条是说，不要觉得weak ptr好像提供了isvalid函数，然后调用一下看一下就可以开始拿里面的东西了，必须要pin（lock），然后确保有一个强引用的时候，这样物体的引用计数才不可能是0，这个时候才是安全的，尤其是多线程的情况。你们往上面大概Dereferencing and Accessing的最后一句话，是不是我说的情况？其实这个事情很好解决，虚幻就不应该在弱引用上提供get，就完事了。c++11标准里面就给了标准答案的东西，就是不用，做和奇奇怪怪的东西还在文档里面说得不清不楚的。虚幻的程序水平真的很成问题。这个引擎完全可以划分到c语言上了。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/creating-objects-in-unreal/
+提供了创建UObject的一些函数，好像也就NewObject还偶尔出现一下。形参里面这个Outer，没看懂，可能是一个引用，让它安定下来。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/unreal-object-handling-in-unreal-engine/
+
+自动初始化为0，反正有就有嘛。
+
+Automatic Updating of References
+When an AActor or UActorComponent is destroyed or otherwise removed from play, all references to it that are visible to the reflection system (UProperty pointers and pointers stored in Unreal Engine container classes such as TArray) are automatically nulled.
+官方明确的说了，这个是AActor or UActorComponent被删，我估计应该是只有这个才有这个行为。影响的指针也只提到2类。我猜Unreal Engine container classes可能会自动把里面的指针改成shared ptr，应该不可能是weak ptr，因为如果是默认行为的话，应该要增加一下引用计数，不然有可能无法让资源安定。
+然后官方说了：
+It is important to realize that this feature applies only to UActorComponent or AActor references marked with UPROPERTY or stored in an Unreal Engine container class. 
+
+Another case where a referenced UObject UProperty will be automatically null'ed is when using 'Force Delete' on an asset in the editor. As a result, all code operating on UObjects which are assets must handle these pointers becoming null. 
+这下就有意思了，前面说的情况还很局限，但是这个的情况就很夸张了。一个asset几乎可以是任何东西。现在的结果就是只要是某种虚幻的引用，UPROPERTY指针，虚幻容器内的任何指针，强弱引用，指向了UObject，都必须要检查指针是否被设置为无效了。
+这个事情也带来一个额外的可能需要考虑的事情，就是在指向UObject的时候，只使用上面说的某种可以被设置无效的引用方式，因为生指针无法确定物体是否还在，等于没法用。
+这也就是这个文档最开头说的，反正一路if就行了，但是文档开头没有说哪些指针可以用。
+
+Serialization
+explicitly marked as "transient"的东西不会被保存，多半就是化妆品。应该是在宏里面。
+UObject::Serialize这个其实很重要，每次改c++的类，蓝图里面设置的东西就会被清空，然后要手动重新设置一次，很麻烦，应该是在这儿里面可以设置一个自动化的处理。没测试。
+
+Editor Integration
+里面提到了UObjects and UProperties，应该是2个class。我猜UPROPERTY的指针以外的东西可能就是用这个UProperty来处理的。
+
+Run-Time Type Information and Casting
+里面提到了super，所有函数先super，好习惯。
+cast相关的函数还有一个IsA。
+提到了2个函数，Destroy和DestroyComponent。
+
+Network Replication
+变量可以同步。
+函数可以标记在特定的某一段执行，与之配合的就是把某些东西标记为某一个特定的客户端所单独有的，从而确定到底是哪个客户端要做这个事情。
+
+
+
+https://docs.unrealengine.com/5.0/en-US/typed-object-pointer-properties-in-unreal-engine/
+TSubclassOf
+youtube上有一个UE4 - Blueprints to C++系列，里面有一个视频也在讲这个。
+一句话就是，UClass*相当于TSubclassOf<UObject>，希望没说错~我猜这两个都必须加UPROPERTY。
+官方还给了例子，UClass*和TSubclassOf是可以互相赋值的，如果失败得到nullptr。
+
+
+

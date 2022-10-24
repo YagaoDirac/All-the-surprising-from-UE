@@ -1,8 +1,12 @@
 https://github.com/YagaoDirac/All-the-surprising-from-UE
+或者类似名字
 
 作者：yagaodirac
 github：yagaodirac
 twitter：yagaodirac
+
+长期更新，欢迎到github下载最新版本。
+转载注明出处。
 
 
 
@@ -31,6 +35,13 @@ project，platforms，里面，是其他的化妆。
 cooking的一些具体细节可以在
 https://docs.unrealengine.com/5.0/en-US/build-operations-cooking-packaging-deploying-and-running-projects-in-unreal-engine/
 找到。我暂时不研究这个了。
+
+
+
+改变物体中心，move pivot for objects
+
+alt中间按住gizmo拖，然后右键，pivot里面什么什么。
+之后再按N好像还有一个什么神奇的效果。
 
 
 

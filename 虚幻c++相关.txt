@@ -1,10 +1,12 @@
-虚幻c++
-
 https://github.com/YagaoDirac/All-the-surprising-from-UE
+或者类似名字
 
 作者：yagaodirac
 github：yagaodirac
 twitter：yagaodirac
+
+长期更新，欢迎到github下载最新版本。
+转载注明出处。
 
 
 
@@ -12,11 +14,31 @@ General
 
 不是要吵架，很多人觉得自己可以随手写蓝图了，觉得自己已经是很有经验的虚幻程序员了，但是其实这个是技术策划的技能。如果你的电脑不能轻松跑虚幻加一个vs，比如今天（2022），如果你的电脑没有32g内存，那么几乎可以肯定你没有足够的虚幻c++的能力。或者换句话说，如果你的电脑没有32g内存，你可以先不读这个文档了，因为暂时没办法真的使用，可以考虑先研究编辑器内的功能，也不少了。
 
-虚幻很喜欢崩溃，所以所有地方都要做安全设计，反正就是一路if就完事了，不然重新开编辑器很浪费时间。所以m2的ssd，很大的cpu，还是很重要的。
+这儿复制一下这个文档里面的另外一个地方：
+https://docs.unrealengine.com/5.0/en-US/unreal-object-handling-in-unreal-engine/
+Another case where a referenced UObject UProperty will be automatically null'ed is when using 'Force Delete' on an asset in the editor. As a result, all code operating on UObjects which are assets must handle these pointers becoming null. 
+这下就有意思了，前面说的情况还很局限，但是这个的情况就很夸张了。一个asset几乎可以是任何东西。现在的结果就是只要是某种虚幻的引用，UPROPERTY指针，虚幻容器内的任何指针，强弱引用，指向了UObject，都必须要检查指针是否被设置为无效了。
+这个事情也带来一个额外的可能需要考虑的事情，就是在指向UObject的时候，只使用上面说的某种可以被设置无效的引用方式，因为生指针无法确定物体是否还在，等于没法用。
+复制完毕。
+也就是说当你看到别人的代码里面有一堆if的时候，你还需要知道if后面那个指针或者引用到底是什么类型，抄作业的时候需要知道这个。
 
 大方向是，c++可以给几乎一切的东西给蓝图，包括变量和函数。但是蓝图只能按类暴露给c++，几乎只有一个rtti的效果，基本上这个只能用于创建物体。我看到过一点点关于怎么在c++里面调用蓝图里面的函数的资料，但是没有深入，不知道能不能用。编辑器里面也可以直接拿c++的结果往level里面放，所以理论上是可以在完全不用蓝图的情况下做东西的。实际上我的意见是，应该尽量限制蓝图的使用。于是，蓝图转c++的技术就尤为重要。这个文档里面记录了一些，包括docs里面，包括后面有一段专门讲这个。
 
 overload任何函数的时候，进去先写super::函数名（所有参数），除非确认到没有这个。
+
+
+
+如何在vs2022里面搜索一个类
+
+va有一个方法，find references, alt shift f。之后的技巧是，搜索class的时候，注意一下，后面如果有ENGINE_API，才是定义。
+这个方法可以在17.3.5上正常用。
+
+而vs2022本体的类试图在新的17.3.5更新以后，出了一个还比较大的问题。
+从要搜的类上随便继承出来一个不要的类，什么都不用多写，然后去类视图（class view），从工程的那个条目进去，不要用虚幻的那个树。这个方法是进到cpp里面。如果要进到header里面，对着要找的类，右键，利用va的功能里面，add include，然后用ctrl 左键点这个include语句的文件名字进去，这个地方f12不一定能用，不过不影响。
+
+反正原则就是，在类视图（class view）里面用搜索功能，vs就只能重新开了。
+
+当然如果你有其他版本的vs，都试试呗，这个问题只在17.3.5的vs2022里面有，如果你的是17.3.4或者更之前的版本，先不要更新。
 
 
 
@@ -94,7 +116,7 @@ c++里面的函数和蓝图里面的函数的名字很不一样，基本上只�
 
 抄代码的时候一定要注意一个事情，就是有一些函数是必须在里面调用super版本的，而且还有时机问题。通常来说，如果自己写的时候，漏掉任何一个super调用，编辑器都有可能开不开。如遇此情况，请切莫惊慌，认真读报错。
 
-
+check (UE4's equivalent of assert) 
 
 
 
@@ -169,6 +191,16 @@ https://courses.tomlooman.com/courses/unrealengine-cpp/lectures/32515407
 3：30
 他说的，如果一个指针标记成UPROPERTY，当它指向的东西被删掉了，这个指针会变成null。没验证过不清楚。
 
+一个例子，注意DisplayName ：
+UENUM()
+enum EViewModeIndex
+{
+	/** Wireframe w/ brushes. */
+	VMI_BrushWireframe = 0 UMETA(DisplayName = "Wireframe"),
+	/** Wireframe w/ BSP. */
+	VMI_Wireframe = 1 UMETA(DisplayName = "CSG Wireframe"),
+。。。
+
 
 
 visual studio, vs
@@ -219,6 +251,15 @@ K2据说是以前虚幻很早的版本里面的kismet2.0，它的接班人是蓝
 理论上可以调用K2的函数，可以拿他们当参考。
 
 
+
+物理大方向
+
+就说一个细节，在c++里面好像是无法设置很自定义的碰撞组的，我唯一知道的一个是
+SetCollisionProfileName(TEXT("预设的名字"));
+这个预设就是project setting里面collision里面的第三个。
+
+还有一个没测试的
+SetActorEnableCollision(false);
 
 
 

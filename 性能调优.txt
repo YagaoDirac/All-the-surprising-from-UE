@@ -70,4 +70,16 @@ Niagara，以及所有的粒子系统，暂时不清楚，但是直觉是这一�
 
 
 
+
+
+
+https://www.youtube.com/watch?v=FeWtslAEtyc
+41:21
+就是说，tick其实可以很贵。不一定要重建了就tick。
+控制台指令 dumpticks
+
+
+
+
+
 没了，我想到了再来补充。
